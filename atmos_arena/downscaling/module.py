@@ -90,7 +90,7 @@ class DownscalingModule(LightningModule):
         x, y, lead_times, in_variables, out_variables = batch # lead_times is set to 0 for this task
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
-        pred = self.net(x, lead_times, in_variables)
+        pred = self.net(x, lead_times, in_variables, out_variables)
         loss_dict = mse(pred, y, out_variables, self.lat)
         for var in loss_dict.keys():
             self.log(
@@ -109,7 +109,7 @@ class DownscalingModule(LightningModule):
         x, y, lead_times, in_variables, out_variables = batch
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
-        pred = self.net(x, lead_times, in_variables)
+        pred = self.net(x, lead_times, in_variables, out_variables)
         metrics = [lat_weighted_mse_val, lat_weighted_rmse]
         all_loss_dicts = [
             m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=None, log_postfix="") for m in metrics
@@ -135,7 +135,9 @@ class DownscalingModule(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables, out_variables = batch
-        pred = self.net(x, lead_times, variables)
+        # interpolate x to match y shape
+        x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
+        pred = self.net(x, lead_times, variables, out_variables)
         metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_mean_bias, pearson]
         all_loss_dicts = [
             m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=None, log_postfix="") for m in metrics
