@@ -47,7 +47,7 @@ class StormerClimateBench(Stormer):
         
         # # overwrite Stormer
         # # use a linear prediction head for this task
-        # self.head = nn.Linear(hidden_size, in_img_size[0]*in_img_size[1])
+        self.head = nn.Linear(hidden_size, in_img_size[0]*in_img_size[1])
 
         if freeze_encoder:
             for name, p in self.blocks.named_parameters():
@@ -57,20 +57,6 @@ class StormerClimateBench(Stormer):
                     continue
                 else:
                     p.requires_grad_(False)
-    
-    def aggregate_time(self, x: torch.Tensor):
-        """
-        x: B, T, L, D
-        """
-        b, _, l, _ = x.shape
-        x = torch.einsum("btld->bltd", x)
-        x = x.flatten(0, 1)  # BxL, T, D
-
-        time_query = self.time_query.repeat_interleave(x.shape[0], dim=0) # BxL, 1, D
-        x, _ = self.time_agg(time_query, x, x)  # BxL, 1, D
-        x = x.squeeze(1) # BxL, D
-
-        return x.unflatten(dim=0, sizes=(b, l))  # B, L, D
 
     def forward(self, x, time_interval, variables):
         # x: `[B, T, V, H, W]` shape.
@@ -79,18 +65,19 @@ class StormerClimateBench(Stormer):
         
         x = self.embedding(x, variables) # BxT, L, D
         x = self.embed_norm_layer(x) # BxT, L, D
-        
-        # add time embedding and aggregate over time dimension
-        # time emb: 1, T, D
-        x = x.unflatten(0, sizes=(b, t)) # B, T, L, D
-        x = x + self.time_pos_embed.unsqueeze(2)
-        x = self.aggregate_time(x) # B, L, D
 
-        time_interval_emb = self.t_embedder(time_interval) # time_interval_emb is an artifact from the pretrained model
+        time_interval_emb = self.t_embedder(time_interval).repeat_interleave(t, dim=0) # time_interval_emb is an artifact from the pretrained model
         for block in self.blocks:
             x = block(x, time_interval_emb)
+            
+        x = x.unflatten(0, sizes=(b, t)) # B, T, L, D
+        x = x + self.time_pos_embed.unsqueeze(2)
+        # global average pooling, also used in CNN-LSTM baseline in ClimateBench
+        x = x.mean(-2) # B, T, D
+        time_query = self.time_query.repeat_interleave(x.shape[0], dim=0)
+        x, _ = self.time_agg(time_query, x, x)  # B, 1, D
         
-        x = self.head(x, time_interval_emb)
-        x = self.unpatchify(x)
+        x = self.head(x)
+        x = x.reshape(-1, 1, self.in_img_size[0], self.in_img_size[1]) # B, 1, H, W
         
         return x
