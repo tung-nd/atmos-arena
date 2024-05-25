@@ -109,6 +109,7 @@ class Stormer(nn.Module):
         depth=24,
         num_heads=16,
         mlp_ratio=4.0,
+        freeze_encoder=False,
     ):
         super().__init__()
         
@@ -146,6 +147,15 @@ class Stormer(nn.Module):
         self.head = FinalLayer(hidden_size, patch_size, len(out_variables))
 
         self.initialize_weights()
+        
+        if freeze_encoder:
+            for name, p in self.blocks.named_parameters():
+                name = name.lower()
+                # we do not freeze the norm layers, as suggested by https://arxiv.org/abs/2103.05247
+                if 'norm' in name:
+                    continue
+                else:
+                    p.requires_grad_(False)
 
     def initialize_weights(self):
         # Initialize transformer layers:
