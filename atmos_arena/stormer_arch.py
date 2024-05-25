@@ -195,7 +195,7 @@ class Stormer(nn.Module):
         imgs = x.reshape(shape=(x.shape[0], v, h * p, w * p))
         return imgs
 
-    def forward(self, x, time_interval, variables):
+    def forward(self, x, time_interval, variables, out_variables=None):
         
         x = self.embedding(x, variables) # B, L, D
         x = self.embed_norm_layer(x)

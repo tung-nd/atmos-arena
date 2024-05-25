@@ -128,7 +128,7 @@ class ClimaXClimateBench(ClimaX):
 
         return x
 
-    def forward(self, x, lead_times, variables):
+    def forward(self, x, lead_times, variables, out_variables=None):
         x = self.forward_encoder(x, lead_times, variables)  # B, 1, D
         preds = self.head(x)
         preds = preds.reshape(-1, 1, self.in_img_size[0], self.in_img_size[1]) # B, 1, H, W

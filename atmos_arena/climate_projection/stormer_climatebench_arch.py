@@ -58,7 +58,7 @@ class StormerClimateBench(Stormer):
                 else:
                     p.requires_grad_(False)
 
-    def forward(self, x, time_interval, variables):
+    def forward(self, x, time_interval, variables, out_variables=None):
         # x: `[B, T, V, H, W]` shape.
         b, t, _, _, _ = x.shape
         x = x.flatten(0, 1)  # BxT, V, H, W

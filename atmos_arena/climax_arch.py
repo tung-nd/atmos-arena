@@ -43,6 +43,7 @@ class ClimaX(nn.Module):
         mlp_ratio=4.0,
         drop_path=0.1,
         drop_rate=0.1,
+        freeze_encoder=True,
     ):
         super().__init__()
 
@@ -83,7 +84,8 @@ class ClimaX(nn.Module):
                     qkv_bias=True,
                     drop_path=dpr[i],
                     norm_layer=nn.LayerNorm,
-                    drop=drop_rate,
+                    proj_drop=drop_rate,
+                    attn_drop=drop_rate,
                 )
                 for i in range(depth)
             ]
@@ -103,6 +105,15 @@ class ClimaX(nn.Module):
         # --------------------------------------------------------------------------
 
         self.initialize_weights()
+        
+        if freeze_encoder:
+            for name, p in self.blocks.named_parameters():
+                name = name.lower()
+                # we do not freeze the norm layers, as suggested by https://arxiv.org/abs/2103.05247
+                if 'norm' in name:
+                    continue
+                else:
+                    p.requires_grad_(False)
 
     def initialize_weights(self):
         # initialize pos_emb and var_emb
@@ -223,7 +234,7 @@ class ClimaX(nn.Module):
 
         return x
 
-    def forward(self, x, y, lead_times, variables, out_variables, metric, lat):
+    def forward(self, x, lead_times, variables, out_variables=None):
         """Forward pass through the model.
 
         Args:
@@ -241,14 +252,4 @@ class ClimaX(nn.Module):
         preds = self.unpatchify(preds)
         out_var_ids = self.get_var_ids(tuple(out_variables), preds.device)
         preds = preds[:, out_var_ids]
-
-        if metric is None:
-            loss = None
-        else:
-            loss = [m(preds, y, out_variables, lat) for m in metric]
-
-        return loss, preds
-
-    def evaluate(self, x, y, lead_times, variables, out_variables, transform, metrics, lat, clim, log_postfix):
-        _, preds = self.forward(x, y, lead_times, variables, out_variables, metric=None, lat=lat)
-        return [m(preds, y, transform, out_variables, lat, clim, log_postfix) for m in metrics]
+        return preds
