@@ -1,0 +1,193 @@
+seed_everything: 42
+
+# ---------------------------- TRAINER -------------------------------------------
+trainer:
+  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/forecasting
+
+  precision: 16
+
+  devices: null
+  num_nodes: 1
+  accelerator: gpu
+  strategy: ddp_find_unused_parameters_true
+
+  min_epochs: 1
+  max_epochs: 50
+  enable_progress_bar: true
+
+  sync_batchnorm: True
+  enable_checkpointing: True
+  num_sanity_val_steps: 1
+
+  # debugging
+  fast_dev_run: false
+
+  logger:
+    class_path: lightning.pytorch.loggers.wandb.WandbLogger
+    init_args:
+      entity: 'tungnd'
+      project: 'atmos-arena'
+      save_dir: ${trainer.default_root_dir}/forecasting_climax_10days_all_vars_finetune_backbone_128bs_5e-7_lr
+      name: forecasting_climax_10days_all_vars_finetune_backbone_128bs_5e-7_lr
+
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: "step"
+
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        dirpath: "${trainer.default_root_dir}/forecasting_climax_10days_all_vars_finetune_backbone_128bs_5e-7_lr/checkpoints"
+        monitor: "val/w_mse" # name of the logged metric which determines when model is improving
+        mode: "min" # "max" means higher metric value is better, can be also "min"
+        save_top_k: 1 # save k best models (determined by above metric)
+        save_last: True # additionaly always save model from last epoch
+        verbose: False
+        filename: "epoch_{epoch:03d}"
+        auto_insert_metric_name: False
+
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        monitor: "val/w_mse" # name of the logged metric which determines when model is improving
+        mode: "min" # "max" means higher metric value is better, can be also "min"
+        patience: 10 # how many validation epochs of not improving until training stops
+        min_delta: 0. # minimum change in the monitored metric needed to qualify as an improvement
+
+    - class_path: lightning.pytorch.callbacks.RichModelSummary
+      init_args:
+        max_depth: -1
+
+    - class_path: lightning.pytorch.callbacks.TQDMProgressBar
+
+# ---------------------------- MODEL -------------------------------------------
+model:
+  lr: 5e-7
+  beta_1: 0.9
+  beta_2: 0.999
+  weight_decay: 1e-5
+  warmup_epochs: 5
+  max_epochs: 50
+  warmup_start_lr: 1e-8
+  eta_min: 1e-8
+  pretrained_path: https://huggingface.co/tungnd/climax/resolve/main/1.40625deg.ckpt
+
+  net:
+    class_path: climax_arch.ClimaX
+    init_args:
+      img_size: [128, 256]
+      default_vars: [
+        "land_sea_mask",
+        "orography",
+        "lattitude",
+        "2m_temperature",
+        "10m_u_component_of_wind",
+        "10m_v_component_of_wind",
+        "geopotential_50",
+        "geopotential_250",
+        "geopotential_500",
+        "geopotential_600",
+        "geopotential_700",
+        "geopotential_850",
+        "geopotential_925",
+        "u_component_of_wind_50",
+        "u_component_of_wind_250",
+        "u_component_of_wind_500",
+        "u_component_of_wind_600",
+        "u_component_of_wind_700",
+        "u_component_of_wind_850",
+        "u_component_of_wind_925",
+        "v_component_of_wind_50",
+        "v_component_of_wind_250",
+        "v_component_of_wind_500",
+        "v_component_of_wind_600",
+        "v_component_of_wind_700",
+        "v_component_of_wind_850",
+        "v_component_of_wind_925",
+        "temperature_50",
+        "temperature_250",
+        "temperature_500",
+        "temperature_600",
+        "temperature_700",
+        "temperature_850",
+        "temperature_925",
+        "relative_humidity_50",
+        "relative_humidity_250",
+        "relative_humidity_500",
+        "relative_humidity_600",
+        "relative_humidity_700",
+        "relative_humidity_850",
+        "relative_humidity_925",
+        "specific_humidity_50",
+        "specific_humidity_250",
+        "specific_humidity_500",
+        "specific_humidity_600",
+        "specific_humidity_700",
+        "specific_humidity_850",
+        "specific_humidity_925",
+      ]
+      patch_size: 4
+      embed_dim: 1024
+      depth: 8
+      decoder_depth: 2
+      num_heads: 16
+      mlp_ratio: 4
+      drop_path: 0.1
+      drop_rate: 0.1
+      freeze_encoder: False
+
+# ---------------------------- DATA -------------------------------------------
+data:
+  root_dir: /eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/
+  in_variables: [
+    "2m_temperature",
+    "10m_u_component_of_wind",
+    "10m_v_component_of_wind",
+    "geopotential_50",
+    "geopotential_250",
+    "geopotential_500",
+    "geopotential_600",
+    "geopotential_700",
+    "geopotential_850",
+    "geopotential_925",
+    "u_component_of_wind_50",
+    "u_component_of_wind_250",
+    "u_component_of_wind_500",
+    "u_component_of_wind_600",
+    "u_component_of_wind_700",
+    "u_component_of_wind_850",
+    "u_component_of_wind_925",
+    "v_component_of_wind_50",
+    "v_component_of_wind_250",
+    "v_component_of_wind_500",
+    "v_component_of_wind_600",
+    "v_component_of_wind_700",
+    "v_component_of_wind_850",
+    "v_component_of_wind_925",
+    "temperature_50",
+    "temperature_250",
+    "temperature_500",
+    "temperature_600",
+    "temperature_700",
+    "temperature_850",
+    "temperature_925",
+    "specific_humidity_50",
+    "specific_humidity_250",
+    "specific_humidity_500",
+    "specific_humidity_600",
+    "specific_humidity_700",
+    "specific_humidity_850",
+    "specific_humidity_925",
+  ]
+  out_variables: [
+    "2m_temperature",
+    "10m_u_component_of_wind",
+    "10m_v_component_of_wind",
+    "geopotential_500",
+    "temperature_850",
+    "specific_humidity_700",
+  ]
+  lead_time: 240
+  data_freq: 6
+  batch_size: 4
+  num_workers: 4
+  pin_memory: False
