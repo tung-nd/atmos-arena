@@ -7,7 +7,7 @@ from climax_arch import ClimaX
 from stormer_arch import Stormer
 from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from atmos_utils.metrics import (
-    mse,
+    lat_weighted_mse,
     lat_weighted_mse_val,
     lat_weighted_rmse,
     lat_weighted_mean_bias,
@@ -91,7 +91,7 @@ class DownscalingModule(LightningModule):
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
         pred = self.net(x, lead_times, in_variables, out_variables)
-        loss_dict = mse(pred, y, out_variables, self.lat)
+        loss_dict = lat_weighted_mse(pred, y, out_variables, self.lat)
         for var in loss_dict.keys():
             self.log(
                 "train/" + var,
