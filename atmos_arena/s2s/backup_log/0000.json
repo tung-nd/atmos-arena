@@ -1,0 +1,30 @@
+{
+    "56": {
+        "w_mse_2m_temperature": 540785472.0,
+        "w_mse_10m_u_component_of_wind": 34.99654006958008,
+        "w_mse_10m_v_component_of_wind": 276.4637451171875,
+        "w_mse": 180261936.0,
+        "w_rmse_2m_temperature": 23254.794921875,
+        "w_rmse_10m_u_component_of_wind": 5.9156622886657715,
+        "w_rmse_10m_v_component_of_wind": 16.627185821533203,
+        "w_rmse": 7759.11279296875,
+        "mean_bias_2m_temperature": 23254.919921875,
+        "mean_bias_10m_u_component_of_wind": -4.039906024932861,
+        "mean_bias_10m_v_component_of_wind": 15.976288795471191,
+        "mean_bias": 7755.619140625
+    },
+    "112": {
+        "w_mse_2m_temperature": 1509386624.0,
+        "w_mse_10m_u_component_of_wind": 65.39327239990234,
+        "w_mse_10m_v_component_of_wind": 729.53466796875,
+        "w_mse": 503129184.0,
+        "w_rmse_2m_temperature": 38850.82421875,
+        "w_rmse_10m_u_component_of_wind": 8.086508750915527,
+        "w_rmse_10m_v_component_of_wind": 27.0098934173584,
+        "w_rmse": 12961.9736328125,
+        "mean_bias_2m_temperature": 38851.3515625,
+        "mean_bias_10m_u_component_of_wind": -6.990830421447754,
+        "mean_bias_10m_v_component_of_wind": 26.62969970703125,
+        "mean_bias": 12956.99609375
+    }
+}
