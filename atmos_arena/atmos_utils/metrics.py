@@ -69,13 +69,14 @@ def lat_weighted_mse(pred, y, vars, lat, mask=None):
     return loss_dict
 
 
-def lat_weighted_mse_val(pred, y, transform, vars, lat, clim, log_postfix=""):
+def lat_weighted_mse_val(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
     """Latitude weighted mean squared error
     Args:
         y: [B, V, H, W]
         pred: [B, V, H, W]
         vars: list of variable names
         lat: H
+        mask: 1 for masked values, 0 for visible values
     """
 
     error = (pred - y) ** 2  # [B, V, H, W]
@@ -88,14 +89,20 @@ def lat_weighted_mse_val(pred, y, transform, vars, lat, clim, log_postfix=""):
     loss_dict = {}
     with torch.no_grad():
         for i, var in enumerate(vars):
-            loss_dict[f"w_mse_{var}{log_postfix}"] = (error[:, i] * w_lat).mean()
+            if mask is not None:
+                loss_dict[f"w_mse_{var}{log_postfix}"] = (error[:, i] * w_lat * mask).sum() / mask.sum()
+            else:
+                loss_dict[f"w_mse_{var}{log_postfix}"] = (error[:, i] * w_lat).mean()
 
-    loss_dict["w_mse"] = np.mean([loss_dict[k].cpu() for k in loss_dict.keys()])
+    if mask is not None:
+        loss_dict["w_mse"] = ((error * w_lat.unsqueeze(1)).mean(dim=1) * mask).sum() / mask.sum()
+    else:
+        loss_dict["w_mse"] = np.mean([loss_dict[k].cpu() for k in loss_dict.keys()])
 
     return loss_dict
 
 
-def lat_weighted_rmse(pred, y, transform, vars, lat, clim, log_postfix=""):
+def lat_weighted_rmse(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
     """Latitude weighted root mean squared error
 
     Args:
@@ -103,6 +110,7 @@ def lat_weighted_rmse(pred, y, transform, vars, lat, clim, log_postfix=""):
         pred: [B, V, H, W]
         vars: list of variable names
         lat: H
+        mask: 1 for masked values, 0 for visible values
     """
 
     pred = transform(pred)
@@ -118,9 +126,15 @@ def lat_weighted_rmse(pred, y, transform, vars, lat, clim, log_postfix=""):
     loss_dict = {}
     with torch.no_grad():
         for i, var in enumerate(vars):
-            loss_dict[f"w_rmse_{var}{log_postfix}"] = torch.mean(
-                torch.sqrt(torch.mean(error[:, i] * w_lat, dim=(-2, -1)))
-            )
+            if mask is not None:
+                loss_dict[f"w_rmse_{var}{log_postfix}"] = torch.mean(
+                    torch.sqrt(torch.sum(error[:, i] * w_lat * mask, dim=(-2, -1)) / mask.sum(dim=(-2, -1)))
+                )
+            else:
+                loss_dict[f"w_rmse_{var}{log_postfix}"] = torch.mean(
+                    torch.sqrt(torch.mean(error[:, i] * w_lat, dim=(-2, -1)))
+                )
+                
 
     loss_dict["w_rmse"] = np.mean([loss_dict[k].cpu() for k in loss_dict.keys()])
 
@@ -252,12 +266,13 @@ def remove_nans(pred: torch.Tensor, gt: torch.Tensor):
     return pred, gt
 
 
-def pearson(pred, y, transform, vars, lat, clim, log_postfix=""):
+def pearson(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
     """
     y: [B, V, H, W]
     pred: [B V, H, W]
     vars: list of variable names
     lat: H
+    mask: 1 for masked values, 0 for visible values
     """
 
     pred = transform(pred)
@@ -267,7 +282,11 @@ def pearson(pred, y, transform, vars, lat, clim, log_postfix=""):
     with torch.no_grad():
         for i, var in enumerate(vars):
             pred_, y_ = pred[:, i].flatten(), y[:, i].flatten()
-            pred_, y_ = remove_nans(pred_, y_)
+            mask = mask.flatten() if mask is not None else None
+            # pred_, y_ = remove_nans(pred_, y_)
+            if mask is not None:
+                mask = mask.to(dtype=torch.bool)
+                pred_, y_ = pred_[mask], y_[mask]
             loss_dict[f"pearsonr_{var}{log_postfix}"] = stats.pearsonr(pred_.cpu().numpy(), y_.cpu().numpy())[0]
 
     loss_dict["pearsonr"] = np.mean([loss_dict[k] for k in loss_dict.keys()])
