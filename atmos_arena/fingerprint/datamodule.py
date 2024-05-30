@@ -47,6 +47,7 @@ class WIPDataModule(LightningDataModule):
     def __init__(
         self,
         hf_path,
+        hf_cache_dir,
         in_variables,
         batch_size=1,
         num_workers=0,
@@ -63,7 +64,7 @@ class WIPDataModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         # load datasets only if they're not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            dataset = load_dataset(self.hparams.hf_path)
+            dataset = load_dataset(self.hparams.hf_path, cache_dir=self.hparams.hf_cache_dir)
             
             self.data_train = WIPDataset(
                 hf_dataset=dataset['train'],

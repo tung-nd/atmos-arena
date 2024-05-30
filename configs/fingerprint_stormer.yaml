@@ -27,8 +27,8 @@ trainer:
     init_args:
       entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/fingerprint_climax_1.40625_finetune_backbone_512bs_5e-4_lr
-      name: fingerprint_climax_1.40625_finetune_backbone_512bs_5e-4_lr
+      save_dir: ${trainer.default_root_dir}/fingerprint_stormer_finetune_backbone_256bs_5e-4_lr
+      name: fingerprint_stormer_finetune_backbone_256bs_5e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,7 +37,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/fingerprint_climax_1.40625_finetune_backbone_512bs_5e-4_lr/checkpoints"
+        dirpath: "${trainer.default_root_dir}/fingerprint_stormer_finetune_backbone_256bs_5e-4_lr/checkpoints"
         monitor: "val/mse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -69,22 +69,19 @@ model:
   max_epochs: 50
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  # pretrained_path: https://huggingface.co/tungnd/climax/resolve/main/5.625deg.ckpt
-  pretrained_path: https://huggingface.co/tungnd/climax/resolve/main/1.40625deg.ckpt
+  pretrained_path: "/eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt"
 
   net:
-    class_path: fingerprint.climax_fingerprint_arch.ClimaXFingerprint
+    class_path: fingerprint.stormer_fingerprint_arch.StormerFingerprint
     init_args:
-      img_size: [64, 128]
-      default_vars: ['surface_air_temperature', 'surface_specific_humidity', 'precipitation']
-      patch_size: 4
-      embed_dim: 1024
-      depth: 8
-      decoder_depth: 2
+      in_img_size: [64, 128]
+      in_variables: ['surface_air_temperature', 'surface_specific_humidity', 'precipitation']
+      patch_size: 2
+      embed_norm: True
+      hidden_size: 1024
+      depth: 24
       num_heads: 16
       mlp_ratio: 4
-      drop_path: 0.1
-      drop_rate: 0.1
       freeze_encoder: False
 
 # ---------------------------- DATA -------------------------------------------
@@ -92,6 +89,6 @@ data:
   hf_path: sungduk/wip_cmip6_v2.2
   hf_cache_dir: /eagle/MDClimSim/tungnd/data/atmos_arena/
   in_variables: ['surface_air_temperature', 'surface_specific_humidity', 'precipitation']
-  batch_size: 16
+  batch_size: 8
   num_workers: 4
   pin_memory: False

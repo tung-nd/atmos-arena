@@ -29,6 +29,7 @@ class ClimaXFingerprint(ClimaX):
             mlp_ratio,
             drop_path,
             drop_rate,
+            freeze_encoder=freeze_encoder
         )
         self.freeze_encoder = freeze_encoder
 

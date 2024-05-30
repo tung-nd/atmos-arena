@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, Union
 
 import torch
 from lightning import LightningModule
 from fingerprint.climax_fingerprint_arch import ClimaXFingerprint
+from fingerprint.stormer_fingerprint_arch import StormerFingerprint
 from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from atmos_utils.pos_embed import interpolate_pos_embed
 from sklearn.metrics import r2_score
@@ -26,7 +27,7 @@ class WIPModule(LightningModule):
     """
     def __init__(
         self,
-        net: ClimaXFingerprint,
+        net: Union[ClimaXFingerprint, StormerFingerprint],
         pretrained_path: str = "",
         lr: float = 5e-4,
         beta_1: float = 0.9,
