@@ -94,6 +94,17 @@ class ClimateNetModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         x, y, lead_times, variables = batch
         pred = self.net(x, lead_times, variables)
+        loss = loss_function(pred, y, self.hparams.loss_type)
+        self.log(
+            "val/loss",
+            loss.item(),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            batch_size=x.size(0),
+            sync_dist=True
+        )
+        
         pred = torch.softmax(pred, 1)
         pred = torch.max(pred, 1)[1]
         cm = get_cm(pred, y)

@@ -42,6 +42,7 @@ class ClimaXClimateNet(ClimaX):
             mlp_ratio,
             drop_path,
             drop_rate,
+            freeze_encoder=freeze_encoder
         )
 
         self.out_vars = out_vars

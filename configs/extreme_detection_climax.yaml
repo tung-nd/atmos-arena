@@ -27,8 +27,8 @@ trainer:
     init_args:
       entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/extreme_detection_climax_finetune_backbone_jaccard_32bs_1e-4_lr
-      name: extreme_detection_climax_finetune_backbone_jaccard_32bs_1e-4_lr
+      save_dir: ${trainer.default_root_dir}/extreme_detection_climax_finetune_backbone_weighted_jaccard_4bs_1e-4_lr
+      name: extreme_detection_climax_finetune_backbone_weighted_jaccard_4bs_1e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,8 +37,8 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/extreme_detection_climax_finetune_backbone_jaccard_32bs_1e-4_lr/checkpoints"
-        monitor: "val/recall_TC" # name of the logged metric which determines when model is improving
+        dirpath: "${trainer.default_root_dir}/extreme_detection_climax_finetune_backbone_weighted_jaccard_4bs_1e-4_lr/checkpoints"
+        monitor: "val/loss" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
         save_last: True # additionaly always save model from last epoch
@@ -48,7 +48,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.EarlyStopping
       init_args:
-        monitor: "val/recall_TC" # name of the logged metric which determines when model is improving
+        monitor: "val/loss" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         patience: 10 # how many validation epochs of not improving until training stops
         min_delta: 0. # minimum change in the monitored metric needed to qualify as an improvement
