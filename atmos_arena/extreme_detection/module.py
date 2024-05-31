@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from lightning import LightningModule
 from extreme_detection.climax_climatenet_arch import ClimaXClimateNet
-from stormer_arch import Stormer
+from extreme_detection.stormer_climatenet_arch import StormerClimateNet
 from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from atmos_utils.pos_embed import interpolate_pos_embed
 from extreme_detection.losses import loss_function
@@ -29,7 +29,7 @@ class ClimateNetModule(LightningModule):
     """
     def __init__(
         self,
-        net: Union[ClimaXClimateNet],
+        net: Union[ClimaXClimateNet, StormerClimateNet],
         loss_type: str = 'jaccard',
         pretrained_path: str = "",
         lr: float = 5e-4,

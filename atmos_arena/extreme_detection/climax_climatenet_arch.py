@@ -10,7 +10,9 @@
 # --------------------------------------------------------
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 from climax_arch import ClimaX
+from extreme_detection.cgnet import ConvBNPReLU
 
 
 class ClimaXClimateNet(ClimaX):
@@ -47,10 +49,19 @@ class ClimaXClimateNet(ClimaX):
 
         self.out_vars = out_vars
         self.freeze_encoder = freeze_encoder
+        
+        self.token_embeds = nn.Sequential(
+            ConvBNPReLU(len(default_vars), 256, 3, 2),
+            ConvBNPReLU(256, 256, 3, 1),
+            ConvBNPReLU(256, 512, 3, 2),
+            ConvBNPReLU(512, 512, 3, 1),
+            ConvBNPReLU(512, 1024, 3, 2),
+            ConvBNPReLU(1024, 1024, 3, 1),
+        )
 
         # overwrite ClimaX
         # use a linear prediction head for this task
-        self.head = nn.Linear(embed_dim, len(self.out_vars) * patch_size**2)
+        self.head = nn.Linear(embed_dim, len(self.out_vars))
 
         if freeze_encoder:
             for name, p in self.blocks.named_parameters():
@@ -72,12 +83,72 @@ class ClimaXClimateNet(ClimaX):
         w = self.in_img_size[1] // p if w is None else w // p
         assert h * w == x.shape[1]
 
+        p = 1
         x = x.reshape(shape=(x.shape[0], h, w, p, p, c))
         x = torch.einsum("nhwpqc->nchpwq", x)
         imgs = x.reshape(shape=(x.shape[0], c, h * p, w * p))
         return imgs
 
     def forward(self, x, lead_times, variables, out_variables=None):
-        x = self.forward_encoder(x, lead_times, variables)  # B, L, D
+        x = self.token_embeds(x) # B, 1024, 96, 144
+        x = x.flatten(2).transpose(1, 2) # B, 96*144, 1024
+        
+        # add pos embedding
+        x = x + self.pos_embed
+
+        # add lead time embedding
+        lead_time_emb = self.lead_time_embed(lead_times.unsqueeze(-1))  # B, D
+        lead_time_emb = lead_time_emb.unsqueeze(1)
+        x = x + lead_time_emb  # B, L, D
+
+        x = self.pos_drop(x)
+
+        # apply Transformer blocks
+        for blk in self.blocks:
+            x = blk(x)
+        x = self.norm(x)
+        
         preds = self.head(x)
-        return self.unpatchify(preds)
+        preds = self.unpatchify(preds)
+        preds = F.interpolate(preds, self.in_img_size, mode='bilinear',align_corners = False)   #Upsample score map, factor=8
+        return preds
+
+
+# model = ClimaXClimateNet(
+#     default_vars=[
+#         'TMQ',
+#         'U850',
+#         'V850',
+#         'UBOT',
+#         'VBOT',
+#         'QREFHT',
+#         'PS',
+#         'PSL',
+#         'T200',
+#         'T500',
+#         'PRECT',
+#         'TS',
+#         'TREFHT',
+#         'Z1000',
+#         'Z200',
+#         'ZBOT',
+#     ],
+#     out_vars=[
+#         "Background",
+#         "Tropical Cyclone",
+#         "Atmospheric River"
+#     ],
+#     img_size=[768, 1152],
+#     patch_size=8,
+#     embed_dim=1024,
+#     depth=8,
+#     decoder_depth=2,
+#     num_heads=16,
+#     mlp_ratio=4,
+#     drop_path=0.1,
+#     drop_rate=0.1,
+#     freeze_encoder=False,
+# ).cuda()
+# x = torch.randn(1, 16, 768, 1152).cuda()
+# y = model(x, torch.Tensor([0.]).cuda(), None, None)
+# print (y.shape)
