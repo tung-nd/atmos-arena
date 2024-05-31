@@ -27,7 +27,14 @@ class WIPDataset(Dataset):
         return len(self.hf_dataset)
     
     def __getitem__(self, index):
-        input = np.array(self.hf_dataset[index]['input']).astype(np.float32)
+        input = np.array(self.hf_dataset[index]['input']).astype(np.float32) # 3, H, W
+        if len(self.in_variables) == 1:
+            if self.in_variables[0] == 'surface_air_temperature':
+                input = input[0].reshape(1, input.shape[1], input.shape[2])
+            elif self.in_variables[0] == 'surface_specific_humidity':
+                input = input[1].reshape(1, input.shape[1], input.shape[2])
+            elif self.in_variables[0] == 'precipitation':
+                input = input[2].reshape(1, input.shape[1], input.shape[2])
         target = self.hf_dataset[index]['target']
         lead_times = torch.Tensor([0.0]).to(dtype=torch.float32)
         return torch.from_numpy(input), torch.Tensor([target]), lead_times, self.in_variables
