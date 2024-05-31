@@ -10,7 +10,7 @@ from torchvision.transforms import transforms
 from lightning import LightningDataModule
 
 # Local application
-from s2s_climax.dataset import ERA5WindowDataset
+from s2s.dataset import ERA5WindowDataset
 
 
 def collate_fn(
