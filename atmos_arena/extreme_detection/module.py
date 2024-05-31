@@ -47,6 +47,7 @@ class ClimateNetModule(LightningModule):
         if len(pretrained_path) > 0:
             self.load_pretrained_weights(pretrained_path)
         self.validation_step_cms = []
+        self.test_step_cms = []
 
     def load_pretrained_weights(self, pretrained_path):
         if pretrained_path.startswith("http"):
@@ -121,6 +122,7 @@ class ClimateNetModule(LightningModule):
         for i in range(3):
             metrics[f"precision_{class_names[i]}"] = precision[i]
             metrics[f"recall_{class_names[i]}"] = recall[i]
+            metrics[f"f1_{class_names[i]}"] = 2 * precision[i] * recall[i] / (precision[i] + recall[i])
             metrics[f"specificity_{class_names[i]}"] = specificity[i]
             metrics[f"sensitivity_{class_names[i]}"] = sensitivity[i]
             metrics[f"iou_{class_names[i]}"] = ious[i]
@@ -133,6 +135,52 @@ class ClimateNetModule(LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
+        self.validation_step_cms = []
+        
+    def test_step(self, batch: Any, batch_idx: int):
+        x, y, lead_times, variables = batch
+        pred = self.net(x, lead_times, variables)
+        loss = loss_function(pred, y, self.hparams.loss_type)
+        self.log(
+            "test/loss",
+            loss.item(),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            batch_size=x.size(0),
+            sync_dist=True
+        )
+        
+        pred = torch.softmax(pred, 1)
+        pred = torch.max(pred, 1)[1]
+        cm = get_cm(pred, y)
+        self.test_step_cms.append(cm)
+        return cm
+    
+    def on_test_epoch_end(self):
+        cm = np.stack(self.test_step_cms, axis=0).sum(0)
+        precision, recall, specificity, sensitivity = get_confusion_metrics(cm)
+        ious = get_iou_perClass(cm)
+        dices = get_dice_perClass(cm)
+        class_names = ['BG', 'TC', 'AR']
+        metrics = {}
+        for i in range(3):
+            metrics[f"precision_{class_names[i]}"] = precision[i]
+            metrics[f"recall_{class_names[i]}"] = recall[i]
+            metrics[f"f1_{class_names[i]}"] = 2 * precision[i] * recall[i] / (precision[i] + recall[i])
+            metrics[f"specificity_{class_names[i]}"] = specificity[i]
+            metrics[f"sensitivity_{class_names[i]}"] = sensitivity[i]
+            metrics[f"iou_{class_names[i]}"] = ious[i]
+            metrics[f"dice_{class_names[i]}"] = dices[i]
+        metrics = {f'test/{k}': v for k, v in metrics.items()}
+        self.log_dict(
+            metrics,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
+        self.test_step_cms = []
 
     def configure_optimizers(self):
         decay = []

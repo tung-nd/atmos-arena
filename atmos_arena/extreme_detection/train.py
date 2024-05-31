@@ -49,7 +49,7 @@ def main():
     cli.trainer.fit(cli.model, datamodule=cli.datamodule, ckpt_path=ckpt_resume_path)
     
     # test the trained model
-    # cli.trainer.test(cli.model, datamodule=cli.datamodule, ckpt_path='best')
+    cli.trainer.test(cli.model, datamodule=cli.datamodule, ckpt_path='best')
 
 
 if __name__ == "__main__":
