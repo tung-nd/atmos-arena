@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 from tqdm import tqdm
 
-root_dir = '/eagle/MDClimSim/tungnd/data/atmos_arena/climatenet'
+root_dir = '/eagle/MDClimSim/tungnd/data/atmos_arena/climatenet_enhanced/'
 nc_files = sorted(glob(os.path.join(root_dir, 'train', '*.nc')))
 all_variables = [
     'TMQ',
@@ -23,6 +23,10 @@ all_variables = [
     'Z1000',
     'Z200',
     'ZBOT',
+    'WS850',
+    'WSBOT',
+    'VRT850',
+    'VRTBOT'
 ]
 normalize_mean = {v: [] for v in all_variables}
 normalize_std = {v: [] for v in all_variables}
