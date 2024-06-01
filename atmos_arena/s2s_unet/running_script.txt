@@ -1,0 +1,6 @@
+python s2s_unet/train.py \
+    -c /localhome/prateiksinha/atmos-arena/configs/s2s_unet_mint3_test_prateik.yaml
+
+on MINT3:
+
+export TMPDIR=/home/prateiksinha/tmp
