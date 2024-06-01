@@ -31,6 +31,7 @@ class WindowForecastingDataModule(LightningDataModule):
         in_variables,
         out_variables,
         lead_time,
+        lead_time_divider=100.0,
         data_freq=6,
         batch_size=1,
         num_workers=0,
@@ -69,6 +70,7 @@ class WindowForecastingDataModule(LightningDataModule):
                 in_transform=self.in_transforms,
                 out_transform=self.out_transforms,
                 lead_time=self.hparams.lead_time,
+                lead_time_divider=self.hparams.lead_time_divider,
                 data_freq=self.hparams.data_freq,
             )
             
@@ -80,6 +82,7 @@ class WindowForecastingDataModule(LightningDataModule):
                     in_transform=self.in_transforms,
                     out_transform=self.out_transforms,
                     lead_time=self.hparams.lead_time,
+                    lead_time_divider=self.hparams.lead_time_divider,
                     data_freq=self.hparams.data_freq, 
                 )
 
@@ -91,6 +94,7 @@ class WindowForecastingDataModule(LightningDataModule):
                     in_transform=self.in_transforms,
                     out_transform=self.out_transforms,
                     lead_time=self.hparams.lead_time,
+                    lead_time_divider=self.hparams.lead_time_divider,
                     data_freq=self.hparams.data_freq,
                 )
 
