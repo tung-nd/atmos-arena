@@ -32,7 +32,6 @@ class WindowForecastingDataModule(LightningDataModule):
         out_variables,
         lead_time,
         data_freq=6,
-        window_size_days=14,
         batch_size=1,
         num_workers=0,
         pin_memory=False,
@@ -71,7 +70,6 @@ class WindowForecastingDataModule(LightningDataModule):
                 out_transform=self.out_transforms,
                 lead_time=self.hparams.lead_time,
                 data_freq=self.hparams.data_freq,
-                window_size_days=self.hparams.window_size_days,
             )
             
             if os.path.exists(os.path.join(self.hparams.root_dir, 'val')):
@@ -83,7 +81,6 @@ class WindowForecastingDataModule(LightningDataModule):
                     out_transform=self.out_transforms,
                     lead_time=self.hparams.lead_time,
                     data_freq=self.hparams.data_freq, 
-                    window_size_days=self.hparams.window_size_days,
                 )
 
             if os.path.exists(os.path.join(self.hparams.root_dir, 'test')):
@@ -95,7 +92,6 @@ class WindowForecastingDataModule(LightningDataModule):
                     out_transform=self.out_transforms,
                     lead_time=self.hparams.lead_time,
                     data_freq=self.hparams.data_freq,
-                    window_size_days=self.hparams.window_size_days,
                 )
 
     def train_dataloader(self):

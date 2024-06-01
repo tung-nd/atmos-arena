@@ -16,7 +16,7 @@ class ERA5WindowDataset(Dataset):
         out_transform,
         lead_time,
         data_freq=6, # 1-hourly or 3-hourly or 6-hourly data
-        window_size_days=14,
+        lead_time_divider=100.0,
     ):
         super().__init__()
         
@@ -30,78 +30,34 @@ class ERA5WindowDataset(Dataset):
         self.out_transform = out_transform
         self.lead_time = lead_time
         self.data_freq = data_freq
-        self.window_size_days = window_size_days 
-
-        self.HRS_IN_DAY = 24
-        self.window_size_steps = (self.window_size_days * self.HRS_IN_DAY) // self.data_freq 
+        self.lead_time_divider = lead_time_divider
         
         file_paths = glob(os.path.join(root_dir, '*.h5'))
         self.file_paths = sorted(file_paths)
         
     def __len__(self):
-        return len(self.file_paths) - self.lead_time // self.data_freq - self.window_size_steps
+        return len(self.file_paths)
     
-    def get_out_path(self, year, inp_file_idx, steps):
-        out_file_idx = inp_file_idx + steps
-        out_path = os.path.join(
-            self.root_dir,
-            f'{year}_{out_file_idx:04}.h5'
-        )
-        if not os.path.exists(out_path):
-            for i in range(steps):
-                out_file_idx = inp_file_idx + i
-                out_path = os.path.join(
-                    self.root_dir,
-                    f'{year}_{out_file_idx:04}.h5'
-                )
-                if os.path.exists(out_path):
-                    max_step_forward = i
-            remaining_steps = steps - max_step_forward
-            next_year = year + 1
-            out_path = os.path.join(
-                self.root_dir,
-                f'{next_year}_{remaining_steps-1:04}.h5'
-            )
-        return out_path
-    
-    def get_data_given_path(self, path, variables):
+    def get_data_given_path(self, path):
+        output_key = f'output_{self.lead_time}'
+        variables = self.in_variables # out_variables is a subset of in_variables
         with h5py.File(path, 'r') as f:
             data = {
                 main_key: {
                     sub_key: np.array(value) for sub_key, value in group.items() if sub_key in variables
-            } for main_key, group in f.items() if main_key in ['input']}
-        return np.stack([data['input'][v] for v in variables], axis=0)
+            } for main_key, group in f.items() if main_key in ['input', output_key]}
+        input = np.stack([data['input'][v] for v in variables], axis=0)
+        output = np.stack([data[output_key][v] for v in variables], axis=0)
+        return input, output
     
     # TODO: Confirm that this function works by writing auxiliary test/plot functions (.ipynb)
     
     def __getitem__(self, index):
         path = self.file_paths[index]
-        
-        steps = self.lead_time // self.data_freq
-        year, inp_file_idx = os.path.basename(path).split('.')[0].split('_')
-        year, inp_file_idx = int(year), int(inp_file_idx)
-
-        inp_data = self.get_data_given_path(path, self.in_variables)
+        inp_data, out_data = self.get_data_given_path(path)
         inp_data = torch.from_numpy(inp_data)
-
-        # Take the window of steps -- steps + window weeks
-        
-        accumulated_data = None 
-        for step_i in range(steps, steps+self.window_size_steps): 
-            out_path_i = self.get_out_path(year, inp_file_idx, step_i)
-            out_data_i = self.get_data_given_path(out_path_i, self.out_variables)
-            out_data_i = torch.from_numpy(out_data_i)
-
-            if accumulated_data is None:
-                accumulated_data = torch.zeros_like(out_data_i)
-    
-            # Accumulate the out_data_i values
-            accumulated_data += out_data_i
-        
-        # Compute the average by dividing by the window size
-        out_data = accumulated_data / self.window_size_steps
-            
-        lead_time_tensor = torch.Tensor([self.lead_time]).to(dtype=inp_data.dtype) / 100.0
+        out_data = torch.from_numpy(out_data)
+        lead_time_tensor = torch.Tensor([self.lead_time]).to(dtype=inp_data.dtype) / self.lead_time_divider
         
         return (
             self.in_transform(inp_data),
