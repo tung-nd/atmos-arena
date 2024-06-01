@@ -1,0 +1,20 @@
+python atmos_arena/data_processing/download_eac4.py --variable 10m_u_component_of_wind --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable 10m_v_component_of_wind --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable 2m_temperature --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable carbon_monoxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable geopotential --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable mean_sea_level_pressure --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable nitrogen_dioxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable nitrogen_monoxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable ozone --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable particulate_matter_10um --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable particulate_matter_1um --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable particulate_matter_2.5um --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable specific_humidity --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable sulphur_dioxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable temperature --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable total_column_carbon_monoxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable total_column_nitrogen_dioxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable total_column_nitrogen_monoxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable total_column_ozone --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4 &
+python atmos_arena/data_processing/download_eac4.py --variable total_column_sulphur_dioxide --year 2003 --save_dir /eagle/MDClimSim/tungnd/data/eac4
