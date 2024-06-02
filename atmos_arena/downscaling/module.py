@@ -5,6 +5,7 @@ import torch
 from lightning import LightningModule
 from climax_arch import ClimaX
 from stormer_arch import Stormer
+from unet_arch import Unet
 from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
 from atmos_utils.metrics import (
     lat_weighted_mse,
@@ -34,7 +35,7 @@ class DownscalingModule(LightningModule):
     """
     def __init__(
         self,
-        net: Union[ClimaX, Stormer],
+        net: Union[ClimaX, Stormer, Unet],
         pretrained_path: str = "",
         lr: float = 5e-4,
         beta_1: float = 0.9,
