@@ -5,17 +5,15 @@ import torch
 import h5py
 import numpy as np 
 import random 
+import json
 from torchvision.transforms import transforms
+from pprint import pprint
+from tqdm import tqdm
 
 from climax_arch import ClimaX
 from stormer_arch import Stormer
 from unet_arch import Unet
-
-PATHS = {
-    'temp_regridded' : '/localhome/data/datasets/climate/berkeley_land_and_ocean_monthly_temperature_128_256.nc', 
-    'temp' : '/localhome/data/datasets/climate/berkeley_land_and_ocean_monthly_temperature.nc', 
-    'model' : '/localhome/tungnd/atmos_arena/infilling/' # Loop through each folder, cd checkpoints, run epoch_x.ckpt
-}
+from atmos_utils.metrics import lat_weighted_rmse
 
 
 """
@@ -111,9 +109,9 @@ def get_data_given_path(path, variables):
     # data = [data['input'][v] for v in variables]
     # return np.stack(data, axis=0)
 
-    orig_ds = xr.open_dataset(PATHS['temp'])
-    times = orig_ds['time'].values
-    times = times[:-3] # ignore 2024's months because they are incomplete
+    # orig_ds = xr.open_dataset(PATHS['temp'])
+    # times = orig_ds['time'].values
+    # times = times[:-3] # ignore 2024's months because they are incomplete
 
     regridded_ds = xr.open_dataset(path)
     regridded_np = regridded_ds['temperature'].values
@@ -121,50 +119,55 @@ def get_data_given_path(path, variables):
 
     return regridded_np
 
+class Dataset(torch.utils.data.DataLoader): 
+    def __init__(self, data_path, mask_ratio_range):
+        data_path = data_path
+        in_data = get_data_given_path(data_path, in_variables) # (T, H, W)
+        in_data = torch.from_numpy(in_data) # (T, H, W)
+        out_data = get_data_given_path(data_path, out_variables) # (T, H, W)
+        out_data = torch.from_numpy(out_data)
 
-def get_item(data_path): 
-    in_data = get_data_given_path(data_path, in_variables) # (V, H, W)
-    in_data = torch.from_numpy(in_data) # (V, H, W)
-    out_data = get_data_given_path(data_path, out_variables) # (V', H, W)
-    out_data = torch.from_numpy(out_data)
-    lead_times = torch.Tensor([0.0]).to(dtype=in_data.dtype)
-
-    # CONVERT IN_DATA AND OUT_DATA FROM C TO K
-    c_to_k = 273.15
-    in_data = in_data - c_to_k
-    out_data = out_data - c_to_k
-
-    #if self.predefined_mask_dict is None:
-    mask_ratio = random.choice(mask_ratio_range)
-    mask = np.random.choice([0, 1], size=in_data.shape[1:], p=[mask_ratio, 1 - mask_ratio]) # (H, W)
-    mask = torch.from_numpy(mask).to(dtype=in_data.dtype)
+        # adjust units
+        c_to_k = lambda x : x + 273.15
+        self.in_data = c_to_k(in_data)
+        self.out_data = c_to_k(out_data)
+     
+        self.length = in_data.shape[0]
+        
+        self.mask_ratio_range = mask_ratio_range
+        
+    def __getitem__(self, i): 
+        mask = self.get_mask()
+        return (
+            in_transforms(self.in_data[i:i+1,:,:]) * mask,
+            out_transforms(self.out_data[i:i+1,:,:]),
+            mask
+        )
     
-    return (
-        in_transforms(in_data) * mask,
-        out_transforms(out_data),
-        lead_times,
-        mask,
-        in_variables,
-        out_variables,
-    )
+    def __len__(self):
+        return self.length
 
+    def get_mask(self):
+        mask_ratio = random.choice(self.mask_ratio_range)
+        mask = np.random.choice([0, 1], size=self.in_data.shape[1:], p=[mask_ratio, 1 - mask_ratio]) # (H, W)
+        mask = torch.from_numpy(mask).to(dtype=self.in_data.dtype)
+        return mask
 
 def load_model(path): 
-    model = None 
 
     if "unet" in path: 
         model = Unet(
-                    in_channels = 1,
-                    out_channels = 1,
-                    hidden_channels = 128,
-                    activation = "leaky",
-                    norm = True,
-                    dropout = 0.1,
-                    ch_mults = [1, 2, 2, 4],
-                    is_attn = [False, False, False, False],
-                    mid_attn = False,
-                    n_blocks = 2,
-                )
+            in_channels = 1,
+            out_channels = 1,
+            hidden_channels = 128,
+            activation = "leaky",
+            norm = True,
+            dropout = 0.1,
+            ch_mults = [1, 2, 2, 4],
+            is_attn = [False, False, False, False],
+            mid_attn = False,
+            n_blocks = 2,
+        )
                 
     elif "climax" in path: 
         model = Climax(
@@ -178,15 +181,37 @@ def load_model(path):
             out_variables = out_variables,
         )
     else:
-        return model # Error  
+        raise NotImplementedError()
 
-    
     checkpoint = torch.load(path)
     model.load_state_dict(checkpoint['state_dict'], strict=False)
     model.eval() 
 
     return model 
 
+def check_batch(batch):
+    for item in batch:
+        t = type(item)
+        l = len(item) if t == list else item.shape
+        print(f'{t} {l}')
+
+def log_metrics(path, dictionary):
+    # Helper function to replace tensors with their scalar values
+    def replace_tensors(d):
+        for key, value in d.items():
+            if isinstance(value, dict):
+                d[key] = replace_tensors(value)
+            else:
+                d[key] = str(value)
+        return d
+    
+    # Replace tensors in the dictionary
+    updated_dict = replace_tensors(dictionary)
+    
+    print(updated_dict)
+    # Save the updated dictionary as a JSON file
+    with open(path, 'w') as json_file:
+        json.dump(updated_dict, json_file)
 
 """
 
@@ -194,55 +219,89 @@ Main Script
 
 """
 
-#inspect_temp_data() 
-
-test_models_paths = get_models_paths()
-
-
+######################################################################
+# SET PARAMETERS
+######################################################################
+PATHS = {
+    'temp_regridded' : '/localhome/data/datasets/climate/berkeley_land_and_ocean_monthly_temperature_128_256.nc', 
+    'temp' : '/localhome/data/datasets/climate/berkeley_land_and_ocean_monthly_temperature.nc', 
+    'model' : '/localhome/tungnd/atmos_arena/infilling/' # Loop through each folder, cd checkpoints, run epoch_x.ckpt
+}
+batch_size = 8
+root_dir = '/localhome/data/datasets/climate/wb2/1.40625deg_6hr_h5df'
 in_variables = ["2m_temperature"]
 out_variables = ["2m_temperature"]
 mask_ratio_range = [0.1, 0.3, 0.5, 0.7, 0.9]
+device = 'cuda'
+log_dir = './infilling/results'
+#######################################################################
 
-root_dir = '/localhome/data/datasets/climate/wb2/1.40625deg_6hr_h5df'
+# inspect_temp_data() 
 
+# get models
+print(f"\nSearching for model paths in {PATHS['model']}...")
+test_models_paths = get_models_paths()
+pprint(list(test_models_paths.keys()))
+print()
+
+# set mask ratios
+print("Mask ratio uniformly sampled from:")
+print(mask_ratio_range)
+print()
+
+# set transforms
+print('Input variables:')
+pprint(in_variables)
+print('Output variables:')
+pprint(out_variables)
+print()
 in_transforms = get_normalize(in_variables)
 out_transforms = get_normalize(out_variables)
+mean, std = out_transforms.mean, out_transforms.std
+std_denorm = 1 / std
+mean_denorm = -mean * std_denorm
+denormalization = transforms.Normalize(mean_denorm, std_denorm)
 
-normalization = out_transforms
-mean, std = normalization.mean, normalization.std
-denormalization = transforms.Normalize(mean, std)
-
+# set constants
 lat = np.load(os.path.join(root_dir, "lat.npy"))
 lon = np.load(os.path.join(root_dir, "lon.npy"))
+lead_time = torch.Tensor([0.0]).to(device)
 
+dataset = Dataset(PATHS['temp_regridded'], mask_ratio_range)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size) 
 
 for m in test_models_paths: 
 
-    x_dict, y, lead_times, mask_dict, in_variables, out_variables = get_item(PATHS['temp_regridded'])
+    model_path = test_models_paths[m]
+    print(f"Loading checkpoint: {model_path}")
+    model = load_model(model_path)
+    model = model.to(device)
+    
+    model_log_path = os.path.join(log_dir, m)
+    if not os.path.exists(model_log_path):
+        os.makedirs(model_log_path)
+    
+    for i, (x, y, mask) in enumerate(tqdm(dataloader)):
+        x = x.to(device)
+        y = y.to(device)
+        mask = mask.to(device)
+        pred = model(x, lead_time, in_variables, out_variables)
+        breakpoint()
+        loss_dict = lat_weighted_rmse(
+            pred, 
+            y, 
+            denormalization,
+            out_variables, 
+            lat, 
+            clim=None,
+            mask=(1-mask)
+        )
+        log_path_i = os.path.join(model_log_path,f'{i:04d}.json')
+        log_metrics(log_path_i, loss_dict)
+        
+        quit()
 
-    curr_model_path = test_models_paths[m]
-    print(f"LOADING: {curr_model_path}")
-
-    curr_model = load_model(curr_model_path)
-
-    for mask_ratio in mask_dict.keys():
-            x = x_dict[mask_ratio]
-            mask = mask_dict[mask_ratio]
-            pred = curr_model(x, lead_times, in_variables, out_variables)
-            metrics = [lat_weighted_mse_val, lat_weighted_rmse, pearson]
-            all_loss_dicts = [
-                m(pred, y, denormalization, vars=out_variables, lat=lat, clim=None, log_postfix="", mask=(1-mask)) for m in metrics
-            ]
-            # combine loss dicts
-            loss_dict = {}
-            for d in all_loss_dicts:
-                for k in d.keys():
-                    loss_dict[k] = d[k]
-
-            for var in loss_dict.keys():
-                print(
-                    f"{split}/{var}_{mask_ratio} | {loss_dict[var]}"
-                )
+   
 
 
 
