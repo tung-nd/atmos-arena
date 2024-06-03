@@ -47,7 +47,7 @@ class ERA5WindowDataset(Dataset):
                     sub_key: np.array(value) for sub_key, value in group.items() if sub_key in variables
             } for main_key, group in f.items() if main_key in ['input', output_key]}
         input = np.stack([data['input'][v] for v in variables], axis=0)
-        output = np.stack([data[output_key][v] for v in variables], axis=0)
+        output = np.stack([data[output_key][v] for v in self.out_variables], axis=0)
         return input, output
     
     # TODO: Confirm that this function works by writing auxiliary test/plot functions (.ipynb)
