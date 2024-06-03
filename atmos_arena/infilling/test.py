@@ -76,10 +76,6 @@ def get_models_paths():
                 print(f"No checkpoints directory in {folder_path}")
         else:
             print(f"{folder_name} is not a directory")
-
-    # Confirm models loaded 
-    #for m in test_models_paths: 
-        #print(f" - {m} : {test_models_paths[m]}")
     
     return test_models_paths 
 
@@ -93,30 +89,19 @@ def get_normalize(variables):
 
 
 def get_data_given_path(path, variables):
-    # with h5py.File(path, 'r') as f:
-    #     data = {
-    #         main_key: {
-    #             sub_key: np.array(value) for sub_key, value in group.items() if sub_key in variables
-    #     } for main_key, group in f.items() if main_key in ['input']}
-    
-
-    # for key, value in data.items():
-    #     print(key)
-    
-    # print(data)
-    # print(data.shape)
-
-    # data = [data['input'][v] for v in variables]
-    # return np.stack(data, axis=0)
-
-    # orig_ds = xr.open_dataset(PATHS['temp'])
-    # times = orig_ds['time'].values
-    # times = times[:-3] # ignore 2024's months because they are incomplete
+    def remove_nan_observations(array):
+        mask = ~np.isnan(array).any(axis=tuple(range(1, array.ndim)))
+        num_removed = np.sum(~mask)
+        print(f"Number of indices removed for NaNs: {num_removed}")
+        return array[mask]
 
     regridded_ds = xr.open_dataset(path)
     regridded_np = regridded_ds['temperature'].values
-    regridded_np = regridded_np[:-3]
-
+    years = regridded_ds.time.values
+    window = (years >= 2020) & (years < 2024) # 2020-2023
+    regridded_np = regridded_np[window]
+    regridded_np = remove_nan_observations(regridded_np)
+        
     return regridded_np
 
 class Dataset(torch.utils.data.DataLoader): 
@@ -170,9 +155,9 @@ def load_model(path):
         )
                 
     elif "climax" in path: 
-        model = Climax(
-                    default_vars = in_variables, 
-                    img_size=[128, 256],
+        model = ClimaX(
+            default_vars = in_variables, 
+            img_size=[128, 256],
         )
     elif "stormer" in path: 
         model = Stormer(
@@ -189,26 +174,23 @@ def load_model(path):
 
     return model 
 
-def check_batch(batch):
-    for item in batch:
-        t = type(item)
-        l = len(item) if t == list else item.shape
-        print(f'{t} {l}')
-
 def log_metrics(path, dictionary):
     # Helper function to replace tensors with their scalar values
     def replace_tensors(d):
         for key, value in d.items():
             if isinstance(value, dict):
                 d[key] = replace_tensors(value)
-            else:
-                d[key] = str(value)
+            # elif isinstance(value, type(torch.tensor([0]))):
+            else:    
+                d[key] = value.item()
+            # else:
+            #     d[key] = str(value)
         return d
     
     # Replace tensors in the dictionary
     updated_dict = replace_tensors(dictionary)
     
-    print(updated_dict)
+    # print(updated_dict)
     # Save the updated dictionary as a JSON file
     with open(path, 'w') as json_file:
         json.dump(updated_dict, json_file)
@@ -227,7 +209,7 @@ PATHS = {
     'temp' : '/localhome/data/datasets/climate/berkeley_land_and_ocean_monthly_temperature.nc', 
     'model' : '/localhome/tungnd/atmos_arena/infilling/' # Loop through each folder, cd checkpoints, run epoch_x.ckpt
 }
-batch_size = 8
+batch_size = 1
 root_dir = '/localhome/data/datasets/climate/wb2/1.40625deg_6hr_h5df'
 in_variables = ["2m_temperature"]
 out_variables = ["2m_temperature"]
@@ -245,7 +227,7 @@ pprint(list(test_models_paths.keys()))
 print()
 
 # set mask ratios
-print("Mask ratio uniformly sampled from:")
+print("Mask ratios used:")
 print(mask_ratio_range)
 print()
 
@@ -267,39 +249,47 @@ lat = np.load(os.path.join(root_dir, "lat.npy"))
 lon = np.load(os.path.join(root_dir, "lon.npy"))
 lead_time = torch.Tensor([0.0]).to(device)
 
-dataset = Dataset(PATHS['temp_regridded'], mask_ratio_range)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size) 
+for ratio in mask_ratio_range:
+    print(f'Evaluating for mask ratio = {ratio}')
+    dataset = Dataset(PATHS['temp_regridded'], [ratio])
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size) 
 
-for m in test_models_paths: 
+    ratio_log_path = os.path.join(log_dir, f'{(ratio*10):02d}')
+    if not os.path.exists(ratio_log_path):
+        os.makedirs(ratio_log_path)
+            
+    for m in test_models_paths: 
 
-    model_path = test_models_paths[m]
-    print(f"Loading checkpoint: {model_path}")
-    model = load_model(model_path)
-    model = model.to(device)
-    
-    model_log_path = os.path.join(log_dir, m)
-    if not os.path.exists(model_log_path):
-        os.makedirs(model_log_path)
-    
-    for i, (x, y, mask) in enumerate(tqdm(dataloader)):
-        x = x.to(device)
-        y = y.to(device)
-        mask = mask.to(device)
-        pred = model(x, lead_time, in_variables, out_variables)
-        breakpoint()
-        loss_dict = lat_weighted_rmse(
-            pred, 
-            y, 
-            denormalization,
-            out_variables, 
-            lat, 
-            clim=None,
-            mask=(1-mask)
-        )
-        log_path_i = os.path.join(model_log_path,f'{i:04d}.json')
-        log_metrics(log_path_i, loss_dict)
+        model_path = test_models_paths[m]
+        print(f"Loading checkpoint: {model_path}")
+        model = load_model(model_path)
+        model = model.to(device)
         
-        quit()
+        model_log_path = os.path.join(ratio_log_path, m)
+        if not os.path.exists(model_log_path):
+            os.makedirs(model_log_path)
+        
+        with torch.no_grad():
+            for i, (x, y, mask) in enumerate(tqdm(dataloader)):
+                x = x.to(device)
+                y = y.to(device)
+                mask = mask.to(device)
+                pred = model(x, lead_time, in_variables, out_variables)
+                loss_dict = lat_weighted_rmse(
+                    pred, 
+                    y, 
+                    denormalization,
+                    out_variables, 
+                    lat, 
+                    clim=None,
+                    mask=(1-mask)
+                )
+                log_path_i = os.path.join(model_log_path,f'{i:04d}.json')
+                log_metrics(log_path_i, loss_dict)
+    
+    print('Ratio complete!')
+
+print('Done! See `atmos_arena/infilling/get_final_metrics.ipynb` for final metrics for each model')
 
    
 
