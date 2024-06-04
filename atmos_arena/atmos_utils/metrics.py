@@ -3,6 +3,7 @@
 
 import numpy as np
 import torch
+import torchist
 from scipy import stats
 
 
@@ -158,7 +159,7 @@ def lat_weighted_acc(pred, y, transform, vars, lat, clim, log_postfix=""):
     w_lat = torch.from_numpy(w_lat).unsqueeze(0).unsqueeze(-1).to(dtype=pred.dtype, device=pred.device)  # [1, H, 1]
 
     # clim = torch.mean(y, dim=(0, 1), keepdim=True)
-    clim = clim.to(device=y.device).unsqueeze(0)
+    # clim = clim.to(device=y.device).unsqueeze(0)
     pred = pred - clim
     y = y - clim
     loss_dict = {}
@@ -172,6 +173,78 @@ def lat_weighted_acc(pred, y, transform, vars, lat, clim, log_postfix=""):
             )
 
     loss_dict["acc"] = np.mean([loss_dict[k].cpu() for k in loss_dict.keys()])
+
+    return loss_dict
+
+def spectral_div(pred, y, transform, vars, lat, clim, log_postfix="", percentile=0.9):
+    """
+    y: [B, V, H, W]
+    pred: [B V, H, W]
+    vars: list of variable names
+    lat: H
+    """
+
+    pred = transform(pred)
+    y = transform(y)
+    loss_dict = {}
+    
+    nx, ny = pred.shape[-2:]
+    kx = torch.fft.fftfreq(nx) * nx
+    ky = torch.fft.fftfreq(ny) * ny
+    kx, ky = torch.meshgrid(kx, ky)
+    
+    k = torch.sqrt(kx**2 + ky**2).reshape(-1).to(pred.device)
+    k_low = 0.5
+    k_upp = torch.max(k)
+    k_nbin = torch.arange(k_low, torch.max(k), 1).size(0)
+    
+    # Get percentile index
+    k_percentile_idx = int(k_nbin * percentile)
+
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            predictions = pred[:, i]
+            targets = y[:, i]
+            
+            predictions = predictions.reshape(predictions.shape[0], -1, predictions.shape[-2], predictions.shape[-1])
+            targets = targets.reshape(targets.shape[0], -1, targets.shape[-2], targets.shape[-1])
+            
+            assert predictions.shape[1] == targets.shape[1]
+            nc = predictions.shape[1]
+            
+            # Handling missing values in predictions
+            pred_means = torch.nanmean(predictions, dim=(-2, -1), keepdim=True)
+            predictions = torch.where(torch.isnan(predictions), pred_means, predictions)
+            
+            # Compute along mini-batch
+            predictions, targets = torch.nanmean(predictions, dim=0), torch.nanmean(targets, dim=0)
+            
+            # Transform prediction and targets onto the Fourier space and compute the power
+            predictions_power, targets_power = torch.fft.fft2(predictions), torch.fft.fft2(targets)
+            predictions_power, targets_power = torch.abs(predictions_power)**2, torch.abs(targets_power)**2
+            
+            
+            
+            
+            predictions_Sk = torchist.histogram(k.repeat(nc), k_nbin, k_low, k_upp, weights=predictions_power) \
+                            / torchist.histogram(k.repeat(nc), k_nbin, k_low, k_upp)
+
+            targets_Sk = torchist.histogram(k.repeat(nc), k_nbin, k_low, k_upp, weights=targets_power) \
+                        / torchist.histogram(k.repeat(nc), k_nbin, k_low, k_upp)
+            
+            # Extract top-k percentile wavenumber and its corresponding power spectrum
+            predictions_Sk = predictions_Sk[k_percentile_idx:]
+            targets_Sk = targets_Sk[k_percentile_idx:]
+            
+            # Normalize as pdf along ordered k
+            predictions_Sk = predictions_Sk / torch.nansum(predictions_Sk)
+            targets_Sk = targets_Sk / torch.nansum(targets_Sk)
+            
+            
+            div = torch.nansum(targets_Sk * torch.log(torch.clamp(targets_Sk / predictions_Sk, min=1e-9)))
+            
+            
+            loss_dict[f"spectral_div_{var}{log_postfix}"] = div
 
     return loss_dict
 
@@ -277,6 +350,9 @@ def pearson(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
 
     pred = transform(pred)
     y = transform(y)
+    
+    pred = pred - clim
+    y = y - clim
 
     loss_dict = {}
     with torch.no_grad():
