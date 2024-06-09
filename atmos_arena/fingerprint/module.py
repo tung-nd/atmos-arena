@@ -1,6 +1,8 @@
 from typing import Any, Union
 
+import os
 import torch
+import numpy as np
 from lightning import LightningModule
 from fingerprint.climax_fingerprint_arch import ClimaXFingerprint
 from fingerprint.stormer_fingerprint_arch import StormerFingerprint
@@ -43,6 +45,7 @@ class WIPModule(LightningModule):
         self.net = net
         if len(pretrained_path) > 0:
             self.load_pretrained_weights(pretrained_path)
+        self.test_predictions = []
 
     def load_pretrained_weights(self, pretrained_path):
         if pretrained_path.startswith("http"):
@@ -89,6 +92,11 @@ class WIPModule(LightningModule):
     def evaluate(self, batch: Any, split):
         x, y, lead_times, variables = batch
         pred = self.net(x, lead_times, variables)
+        
+        # save prediction if split is test
+        if split == "test":
+            self.test_predictions.append(pred.detach().squeeze().cpu().numpy())
+        
         mse = torch.mean((pred - y) ** 2)
         rmse = torch.sqrt(mse)
         r2 = r2_score(y.detach().squeeze().cpu().numpy(), pred.squeeze().detach().cpu().numpy())
@@ -115,6 +123,10 @@ class WIPModule(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         return self.evaluate(batch, "test")
+    
+    def on_test_epoch_end(self):
+        test_predictions = np.concatenate(self.test_predictions)
+        np.save(os.path.join(self.trainer.default_root_dir, self.trainer.logger._name, "test_predictions.npy"), test_predictions)
 
     def configure_optimizers(self):
         decay = []
