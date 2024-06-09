@@ -18,11 +18,12 @@ def collate_fn_train(
 ) -> Tuple[torch.tensor, torch.tensor, Sequence[str], Sequence[str]]:
     inp = torch.stack([batch[i][0] for i in range(len(batch))]) # B, C, H, W
     out = torch.stack([batch[i][1] for i in range(len(batch))]) # B, C, H, W
-    lead_times = torch.cat([batch[i][2] for i in range(len(batch))])
-    mask = torch.stack([batch[i][3] for i in range(len(batch))]) # B, H, W
-    in_variables = batch[0][4]
-    out_variables = batch[0][5]
-    return inp, out, lead_times, mask, in_variables, out_variables
+    clim = torch.stack([batch[i][2] for i in range(len(batch))]) # B, C, H, W
+    lead_times = torch.cat([batch[i][3] for i in range(len(batch))])
+    mask = torch.stack([batch[i][4] for i in range(len(batch))]) # B, H, W
+    in_variables = batch[0][5]
+    out_variables = batch[0][6]
+    return inp, out, clim, lead_times, mask, in_variables, out_variables
 
 
 def collate_fn_val(
@@ -32,11 +33,12 @@ def collate_fn_val(
     # for each key, we stack the tensors along the batch dimension
     inp_dict = {k: torch.stack([batch[i][0][k] for i in range(len(batch))]) for k in batch[0][0].keys()}
     out = torch.stack([batch[i][1] for i in range(len(batch))]) # B, C, H, W
-    lead_times = torch.cat([batch[i][2] for i in range(len(batch))])
-    mask_dict = {k: torch.stack([batch[i][3][k] for i in range(len(batch))]) for k in batch[0][3].keys()} # B, H, W
-    in_variables = batch[0][4]
-    out_variables = batch[0][5]
-    return inp_dict, out, lead_times, mask_dict, in_variables, out_variables
+    clim = torch.stack([batch[i][2] for i in range(len(batch))]) # B, C, H, W
+    lead_times = torch.cat([batch[i][3] for i in range(len(batch))])
+    mask_dict = {k: torch.stack([batch[i][4][k] for i in range(len(batch))]) for k in batch[0][4].keys()} # B, H, W
+    in_variables = batch[0][5]
+    out_variables = batch[0][6]
+    return inp_dict, out, clim, lead_times, mask_dict, in_variables, out_variables
 
 
 class InfillingDataModule(LightningDataModule):
@@ -49,6 +51,7 @@ class InfillingDataModule(LightningDataModule):
         training_mask_ratio_max,
         eval_mask_ratios,
         eval_mask_path,
+        clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
         batch_size=1,
         num_workers=0,
         pin_memory=False,
@@ -81,6 +84,7 @@ class InfillingDataModule(LightningDataModule):
         if not self.data_train and not self.data_val and not self.data_test:
             self.data_train = ERA5InfillingDataset(
                 root_dir=os.path.join(self.hparams.root_dir, 'train'),
+                clim_path=self.hparams.clim_path,
                 in_variables=self.hparams.in_variables,
                 out_variables=self.hparams.out_variables,
                 in_transform=self.in_transforms,
@@ -94,6 +98,7 @@ class InfillingDataModule(LightningDataModule):
                 }
                 self.data_val = ERA5InfillingDataset(
                     root_dir=os.path.join(self.hparams.root_dir, 'val'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,
@@ -107,6 +112,7 @@ class InfillingDataModule(LightningDataModule):
                 }
                 self.data_test = ERA5InfillingDataset(
                     root_dir=os.path.join(self.hparams.root_dir, 'test'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,

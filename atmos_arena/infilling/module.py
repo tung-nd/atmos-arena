@@ -11,7 +11,9 @@ from atmos_utils.metrics import (
     lat_weighted_mse,
     lat_weighted_mse_val,
     lat_weighted_rmse,
-    pearson
+    pearson,
+    r2,
+    mean_bias
 )
 from atmos_utils.pos_embed import interpolate_pos_embed
 from torchvision.transforms import transforms
@@ -81,7 +83,7 @@ class InfillingModule(LightningModule):
         self.lon = lon
 
     def training_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, mask, in_variables, out_variables = batch # lead_times is set to 0 for this task
+        x, y, _, lead_times, mask, in_variables, out_variables = batch # lead_times is set to 0 for this task
         pred = self.net(x, lead_times, in_variables, out_variables)
         loss_dict = lat_weighted_mse(pred, y, out_variables, self.lat, mask=(1-mask))
         for var in loss_dict.keys():
@@ -98,14 +100,14 @@ class InfillingModule(LightningModule):
         return loss
     
     def evaluate(self, batch: Any, split: str):
-        x_dict, y, lead_times, mask_dict, in_variables, out_variables = batch
+        x_dict, y, clim, lead_times, mask_dict, in_variables, out_variables = batch
         for mask_ratio in mask_dict.keys():
             x = x_dict[mask_ratio]
             mask = mask_dict[mask_ratio]
             pred = self.net(x, lead_times, in_variables, out_variables)
-            metrics = [lat_weighted_mse_val, lat_weighted_rmse, pearson]
+            metrics = [lat_weighted_mse_val, lat_weighted_rmse, pearson, mean_bias]
             all_loss_dicts = [
-                m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=None, log_postfix="", mask=(1-mask)) for m in metrics
+                m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=clim, log_postfix="", mask=(1-mask)) for m in metrics
             ]
             # combine loss dicts
             loss_dict = {}
