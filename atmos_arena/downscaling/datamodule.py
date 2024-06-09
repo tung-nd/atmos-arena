@@ -18,10 +18,11 @@ def collate_fn(
 ) -> Tuple[torch.tensor, torch.tensor, Sequence[str], Sequence[str]]:
     inp = torch.stack([batch[i][0] for i in range(len(batch))]) # B, C, H, W
     out = torch.stack([batch[i][1] for i in range(len(batch))]) # B, C, H, W
-    lead_times = torch.cat([batch[i][2] for i in range(len(batch))])
-    in_variables = batch[0][3]
-    out_variables = batch[0][4]
-    return inp, out, lead_times, in_variables, out_variables
+    clim = torch.stack([batch[i][2] for i in range(len(batch))]) # B, C, H, W
+    lead_times = torch.cat([batch[i][3] for i in range(len(batch))])
+    in_variables = batch[0][4]
+    out_variables = batch[0][5]
+    return inp, out, clim, lead_times, in_variables, out_variables
 
 
 class DownscalingDataModule(LightningDataModule):
@@ -31,6 +32,7 @@ class DownscalingDataModule(LightningDataModule):
         out_root_dir,
         in_variables,
         out_variables,
+        clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
         batch_size=1,
         num_workers=0,
         pin_memory=False,
@@ -64,6 +66,7 @@ class DownscalingDataModule(LightningDataModule):
             self.data_train = ERA5DownscalingDataset(
                 in_root_dir=os.path.join(self.hparams.in_root_dir, 'train'),
                 out_root_dir=os.path.join(self.hparams.out_root_dir, 'train'),
+                clim_path=self.hparams.clim_path,
                 in_variables=self.hparams.in_variables,
                 out_variables=self.hparams.out_variables,
                 in_transform=self.in_transforms,
@@ -74,6 +77,7 @@ class DownscalingDataModule(LightningDataModule):
                 self.data_val = ERA5DownscalingDataset(
                     in_root_dir=os.path.join(self.hparams.in_root_dir, 'val'),
                     out_root_dir=os.path.join(self.hparams.out_root_dir, 'val'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,
@@ -84,6 +88,7 @@ class DownscalingDataModule(LightningDataModule):
                 self.data_test = ERA5DownscalingDataset(
                     in_root_dir=os.path.join(self.hparams.in_root_dir, 'test'),
                     out_root_dir=os.path.join(self.hparams.out_root_dir, 'test'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,

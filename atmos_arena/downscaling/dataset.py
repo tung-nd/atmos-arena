@@ -2,15 +2,18 @@ import os
 import numpy as np
 import torch
 import h5py
+import xarray as xr
 
 from torch.utils.data import Dataset
 from glob import glob
+from atmos_utils.data_utils import SINGLE_LEVEL_VARS
 
 class ERA5DownscalingDataset(Dataset):
     def __init__(
         self,
         in_root_dir,
         out_root_dir,
+        clim_path,
         in_variables,
         out_variables,
         in_transform,
@@ -34,6 +37,21 @@ class ERA5DownscalingDataset(Dataset):
                 self.out_file_paths.remove(out_file)
         assert len(self.in_file_paths) == len(self.out_file_paths)
         
+        # process climatology data
+        clim_ds = xr.open_dataset(clim_path)
+        clim_dict = {}
+        for var in out_variables:
+            if var in SINGLE_LEVEL_VARS:
+                # reshape to hour, dayofyear, latitude, longitude
+                clim_dict[var] = clim_ds[var].values.transpose(0, 1, 3, 2)
+                clim_dict[var] = clim_dict[var].reshape(-1, *clim_dict[var].shape[2:])
+            else:
+                level = int(var.split('_')[-1])
+                var_name = '_'.join(var.split('_')[:-1])
+                clim_dict[var] = clim_ds[var_name].sel(level=level).values.transpose(0, 1, 3, 2)
+                clim_dict[var] = clim_dict[var].reshape(-1, *clim_dict[var].shape[2:])
+        self.clim_dict = clim_dict
+        
     def __len__(self):
         return len(self.in_file_paths)
     
@@ -54,10 +72,29 @@ class ERA5DownscalingDataset(Dataset):
         out_data = torch.from_numpy(out_data)
         lead_times = torch.Tensor([0.0]).to(dtype=in_data.dtype)
         
+        # NOTE: this only works for 1-year test data
+        clim = [self.clim_dict[v][index] for v in self.out_variables]
+        clim = np.stack(clim, axis=0)
+        clim = torch.from_numpy(clim)
+        
         return (
             self.in_transform(in_data),
             self.out_transform(out_data),
+            clim,
             lead_times,
             self.in_variables,
             self.out_variables,
         )
+        
+
+# dataset = ERA5DownscalingDataset(
+#     in_root_dir='/eagle/MDClimSim/tungnd/data/wb2/5.625deg_1_step_6hr_h5df/',
+#     out_root_dir='/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df',
+#     clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
+#     in_variables=['2m_temperature', 'geopotential_500'],
+#     out_variables=['2m_temperature', 'geopotential_500'],
+#     in_transform=lambda x: x,
+#     out_transform=lambda x: x,
+# )
+# for v in dataset.clim_dict.keys():
+#     print(v, dataset.clim_dict[v].shape)

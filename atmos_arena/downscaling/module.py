@@ -88,7 +88,7 @@ class DownscalingModule(LightningModule):
         self.lon = lon
 
     def training_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, in_variables, out_variables = batch # lead_times is set to 0 for this task
+        x, y, _, lead_times, in_variables, out_variables = batch # lead_times is set to 0 for this task
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
         pred = self.net(x, lead_times, in_variables, out_variables)
@@ -107,7 +107,7 @@ class DownscalingModule(LightningModule):
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, in_variables, out_variables = batch
+        x, y, _, lead_times, in_variables, out_variables = batch
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
         pred = self.net(x, lead_times, in_variables, out_variables)
@@ -135,13 +135,13 @@ class DownscalingModule(LightningModule):
         return loss_dict
 
     def test_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, variables, out_variables = batch
+        x, y, clim, lead_times, variables, out_variables = batch
         # interpolate x to match y shape
         x = torch.nn.functional.interpolate(x, size=y.shape[-2:], mode='bilinear')
         pred = self.net(x, lead_times, variables, out_variables)
         metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_mean_bias, pearson]
         all_loss_dicts = [
-            m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=None, log_postfix="") for m in metrics
+            m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=clim, log_postfix="") for m in metrics
         ]
 
         # combine loss dicts
