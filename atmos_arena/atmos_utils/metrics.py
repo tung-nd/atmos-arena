@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torchist
 from scipy import stats
-
+from sklearn.metrics import r2_score
 
 def mse(pred, y, vars, lat=None, mask=None):
     """Mean squared error
@@ -366,6 +366,58 @@ def pearson(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
             loss_dict[f"pearsonr_{var}{log_postfix}"] = stats.pearsonr(pred_.cpu().numpy(), y_.cpu().numpy())[0]
 
     loss_dict["pearsonr"] = np.mean([loss_dict[k] for k in loss_dict.keys()])
+
+    return loss_dict
+
+
+def r2(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
+    """
+    y: [B, V, H, W]
+    pred: [B V, H, W]
+    vars: list of variable names
+    lat: H
+    mask: 1 for masked values, 0 for visible values
+    """
+
+    pred = transform(pred)
+    y = transform(y)
+
+    loss_dict = {}
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            pred_, y_ = pred[:, i].flatten(), y[:, i].flatten()
+            mask = mask.flatten() if mask is not None else None
+            # pred_, y_ = remove_nans(pred_, y_)
+            if mask is not None:
+                mask = mask.to(dtype=torch.bool)
+                pred_, y_ = pred_[mask], y_[mask]
+            loss_dict[f"r2_{var}{log_postfix}"] = r2_score(pred_.cpu().numpy(), y_.cpu().numpy())
+
+    return loss_dict
+
+
+def mean_bias(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
+    """
+    y: [B, V, H, W]
+    pred: [B V, H, W]
+    vars: list of variable names
+    lat: H
+    mask: 1 for masked values, 0 for visible values
+    """
+
+    pred = transform(pred)
+    y = transform(y)
+
+    loss_dict = {}
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            pred_, y_ = pred[:, i].flatten(), y[:, i].flatten()
+            mask = mask.flatten() if mask is not None else None
+            # pred_, y_ = remove_nans(pred_, y_)
+            if mask is not None:
+                mask = mask.to(dtype=torch.bool)
+                pred_, y_ = pred_[mask], y_[mask]
+            loss_dict[f"mean_bias_{var}{log_postfix}"] = pred_.mean() - y_.mean()
 
     return loss_dict
 
