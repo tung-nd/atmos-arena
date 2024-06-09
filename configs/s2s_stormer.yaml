@@ -27,8 +27,8 @@ trainer:
     init_args:
       entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/s2s_stormer_week_3_4_all_vars_finetune_backbone_32bs_5e-6_lr
-      name: s2s_stormer_week_3_4_all_vars_finetune_backbone_32bs_5e-6_lr
+      save_dir: ${trainer.default_root_dir}/s2s_stormer_week_5_6_6_vars_freeze_backbone_64bs_1e-4_lr
+      name: s2s_stormer_week_5_6_6_vars_freeze_backbone_64bs_1e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,7 +37,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/s2s_stormer_week_3_4_all_vars_finetune_backbone_32bs_5e-6_lr/checkpoints"
+        dirpath: "${trainer.default_root_dir}/s2s_stormer_week_5_6_6_vars_freeze_backbone_64bs_1e-4_lr/checkpoints"
         monitor: "val/w_mse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -61,7 +61,7 @@ trainer:
 
 # ---------------------------- MODEL -------------------------------------------
 model:
-  lr: 5e-6
+  lr: 1e-4
   beta_1: 0.9
   beta_2: 0.999
   weight_decay: 1e-5
@@ -150,72 +150,9 @@ model:
         "2m_temperature",
         "10m_u_component_of_wind",
         "10m_v_component_of_wind",
-        "mean_sea_level_pressure",
-        "geopotential_50",
-        "geopotential_100",
-        "geopotential_150",
-        "geopotential_200",
-        "geopotential_250",
-        "geopotential_300",
-        "geopotential_400",
         "geopotential_500",
-        "geopotential_600",
-        "geopotential_700",
-        "geopotential_850",
-        "geopotential_925",
-        "geopotential_1000",
-        "u_component_of_wind_50",
-        "u_component_of_wind_100",
-        "u_component_of_wind_150",
-        "u_component_of_wind_200",
-        "u_component_of_wind_250",
-        "u_component_of_wind_300",
-        "u_component_of_wind_400",
-        "u_component_of_wind_500",
-        "u_component_of_wind_600",
-        "u_component_of_wind_700",
-        "u_component_of_wind_850",
-        "u_component_of_wind_925",
-        "u_component_of_wind_1000",
-        "v_component_of_wind_50",
-        "v_component_of_wind_100",
-        "v_component_of_wind_150",
-        "v_component_of_wind_200",
-        "v_component_of_wind_250",
-        "v_component_of_wind_300",
-        "v_component_of_wind_400",
-        "v_component_of_wind_500",
-        "v_component_of_wind_600",
-        "v_component_of_wind_700",
-        "v_component_of_wind_850",
-        "v_component_of_wind_925",
-        "v_component_of_wind_1000",
-        "temperature_50",
-        "temperature_100",
-        "temperature_150",
-        "temperature_200",
-        "temperature_250",
-        "temperature_300",
-        "temperature_400",
-        "temperature_500",
-        "temperature_600",
-        "temperature_700",
         "temperature_850",
-        "temperature_925",
-        "temperature_1000",
-        "specific_humidity_50",
-        "specific_humidity_100",
-        "specific_humidity_150",
-        "specific_humidity_200",
-        "specific_humidity_250",
-        "specific_humidity_300",
-        "specific_humidity_400",
-        "specific_humidity_500",
-        "specific_humidity_600",
         "specific_humidity_700",
-        "specific_humidity_850",
-        "specific_humidity_925",
-        "specific_humidity_1000",
       ]
       patch_size: 2
       embed_norm: True
@@ -223,7 +160,7 @@ model:
       depth: 24
       num_heads: 16
       mlp_ratio: 4
-      freeze_encoder: False
+      freeze_encoder: True
 
 # ---------------------------- DATA -------------------------------------------
 data:
@@ -303,76 +240,13 @@ data:
     "2m_temperature",
     "10m_u_component_of_wind",
     "10m_v_component_of_wind",
-    "mean_sea_level_pressure",
-    "geopotential_50",
-    "geopotential_100",
-    "geopotential_150",
-    "geopotential_200",
-    "geopotential_250",
-    "geopotential_300",
-    "geopotential_400",
     "geopotential_500",
-    "geopotential_600",
-    "geopotential_700",
-    "geopotential_850",
-    "geopotential_925",
-    "geopotential_1000",
-    "u_component_of_wind_50",
-    "u_component_of_wind_100",
-    "u_component_of_wind_150",
-    "u_component_of_wind_200",
-    "u_component_of_wind_250",
-    "u_component_of_wind_300",
-    "u_component_of_wind_400",
-    "u_component_of_wind_500",
-    "u_component_of_wind_600",
-    "u_component_of_wind_700",
-    "u_component_of_wind_850",
-    "u_component_of_wind_925",
-    "u_component_of_wind_1000",
-    "v_component_of_wind_50",
-    "v_component_of_wind_100",
-    "v_component_of_wind_150",
-    "v_component_of_wind_200",
-    "v_component_of_wind_250",
-    "v_component_of_wind_300",
-    "v_component_of_wind_400",
-    "v_component_of_wind_500",
-    "v_component_of_wind_600",
-    "v_component_of_wind_700",
-    "v_component_of_wind_850",
-    "v_component_of_wind_925",
-    "v_component_of_wind_1000",
-    "temperature_50",
-    "temperature_100",
-    "temperature_150",
-    "temperature_200",
-    "temperature_250",
-    "temperature_300",
-    "temperature_400",
-    "temperature_500",
-    "temperature_600",
-    "temperature_700",
     "temperature_850",
-    "temperature_925",
-    "temperature_1000",
-    "specific_humidity_50",
-    "specific_humidity_100",
-    "specific_humidity_150",
-    "specific_humidity_200",
-    "specific_humidity_250",
-    "specific_humidity_300",
-    "specific_humidity_400",
-    "specific_humidity_500",
-    "specific_humidity_600",
     "specific_humidity_700",
-    "specific_humidity_850",
-    "specific_humidity_925",
-    "specific_humidity_1000",
   ]
-  lead_time: 336 # 14 days * 24 hrs/day 
+  lead_time: 672 # 14 days * 24 hrs/day 
   lead_time_divider: 100.0
   data_freq: 6
-  batch_size: 1
+  batch_size: 2
   num_workers: 8
   pin_memory: False
