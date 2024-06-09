@@ -2,14 +2,17 @@ import os
 import numpy as np
 import torch
 import h5py
+import xarray as xr
 
 from torch.utils.data import Dataset
 from glob import glob
+from atmos_utils.data_utils import SINGLE_LEVEL_VARS
 
 class ERA5WindowDataset(Dataset):
     def __init__(
         self,
         root_dir,
+        clim_path,
         in_variables,
         out_variables,
         in_transform,
@@ -35,6 +38,21 @@ class ERA5WindowDataset(Dataset):
         file_paths = glob(os.path.join(root_dir, '*.h5'))
         self.file_paths = sorted(file_paths)
         
+        # process climatology data
+        clim_ds = xr.open_dataset(clim_path)
+        clim_dict = {}
+        for var in out_variables:
+            if var in SINGLE_LEVEL_VARS:
+                # reshape to hour, dayofyear, latitude, longitude
+                clim_dict[var] = clim_ds[var].values.transpose(0, 1, 3, 2)
+                clim_dict[var] = clim_dict[var].reshape(-1, *clim_dict[var].shape[2:])
+            else:
+                level = int(var.split('_')[-1])
+                var_name = '_'.join(var.split('_')[:-1])
+                clim_dict[var] = clim_ds[var_name].sel(level=level).values.transpose(0, 1, 3, 2)
+                clim_dict[var] = clim_dict[var].reshape(-1, *clim_dict[var].shape[2:])
+        self.clim_dict = clim_dict
+        
     def __len__(self):
         return len(self.file_paths)
     
@@ -59,9 +77,19 @@ class ERA5WindowDataset(Dataset):
         out_data = torch.from_numpy(out_data)
         lead_time_tensor = torch.Tensor([self.lead_time]).to(dtype=inp_data.dtype) / self.lead_time_divider
         
+        # NOTE: this only works for 1-year test data
+        # index is the index of input data
+        clim_start_idx = index + self.lead_time // self.data_freq
+        window_days = 14
+        clim_end_idx = clim_start_idx + window_days * 24 // self.data_freq
+        clim = [self.clim_dict[v][clim_start_idx:clim_end_idx].mean(0) for v in self.out_variables]
+        clim = np.stack(clim, axis=0)
+        clim = torch.from_numpy(clim)
+        
         return (
             self.in_transform(inp_data),
             self.out_transform(out_data),
+            clim,
             lead_time_tensor,
             self.in_variables,
             self.out_variables,

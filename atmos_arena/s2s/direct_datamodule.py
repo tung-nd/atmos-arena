@@ -18,10 +18,11 @@ def collate_fn(
 ) -> Tuple[torch.tensor, torch.tensor, Sequence[str], Sequence[str]]:
     inp = torch.stack([batch[i][0] for i in range(len(batch))]) # B, C, H, W
     out = torch.stack([batch[i][1] for i in range(len(batch))]) # B, C, H, W
-    lead_times = torch.cat([batch[i][2] for i in range(len(batch))])
-    in_variables = batch[0][3]
-    out_variables = batch[0][4]
-    return inp, out, lead_times, in_variables, out_variables
+    clim = torch.stack([batch[i][2] for i in range(len(batch))]) # B, C, H, W
+    lead_times = torch.cat([batch[i][3] for i in range(len(batch))])
+    in_variables = batch[0][4]
+    out_variables = batch[0][5]
+    return inp, out, clim, lead_times, in_variables, out_variables
 
 
 class WindowForecastingDataModule(LightningDataModule):
@@ -31,6 +32,7 @@ class WindowForecastingDataModule(LightningDataModule):
         in_variables,
         out_variables,
         lead_time,
+        clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
         lead_time_divider=100.0,
         data_freq=6,
         batch_size=1,
@@ -65,6 +67,7 @@ class WindowForecastingDataModule(LightningDataModule):
         if not self.data_train and not self.data_val and not self.data_test:
             self.data_train = ERA5WindowDataset(
                 root_dir=os.path.join(self.hparams.root_dir, 'train'),
+                clim_path=self.hparams.clim_path,
                 in_variables=self.hparams.in_variables,
                 out_variables=self.hparams.out_variables,
                 in_transform=self.in_transforms,
@@ -77,6 +80,7 @@ class WindowForecastingDataModule(LightningDataModule):
             if os.path.exists(os.path.join(self.hparams.root_dir, 'val')):
                 self.data_val = ERA5WindowDataset(
                     root_dir=os.path.join(self.hparams.root_dir, 'val'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,
@@ -89,6 +93,7 @@ class WindowForecastingDataModule(LightningDataModule):
             if os.path.exists(os.path.join(self.hparams.root_dir, 'test')):
                 self.data_test = ERA5WindowDataset(
                     root_dir=os.path.join(self.hparams.root_dir, 'test'),
+                    clim_path=self.hparams.clim_path,
                     in_variables=self.hparams.in_variables,
                     out_variables=self.hparams.out_variables,
                     in_transform=self.in_transforms,

@@ -11,6 +11,8 @@ from atmos_utils.metrics import (
     lat_weighted_mse,
     lat_weighted_mse_val,
     lat_weighted_rmse,
+    lat_weighted_acc,
+    spectral_div
 )
 from atmos_utils.pos_embed import interpolate_pos_embed
 from torchvision.transforms import transforms
@@ -83,7 +85,7 @@ class DirectForecastingModule(LightningModule):
         self.lead_time = lead_time
 
     def training_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, in_variables, out_variables = batch
+        x, y, _, lead_times, in_variables, out_variables = batch
         pred = self.net(x, lead_times, in_variables, out_variables)
         loss_dict = lat_weighted_mse(pred, y, out_variables, self.lat)
         for var in loss_dict.keys():
@@ -100,7 +102,7 @@ class DirectForecastingModule(LightningModule):
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, in_variables, out_variables = batch
+        x, y, _, lead_times, in_variables, out_variables = batch
         pred = self.net(x, lead_times, in_variables, out_variables)
         metrics = [lat_weighted_mse_val, lat_weighted_rmse]
         all_loss_dicts = [
@@ -126,11 +128,11 @@ class DirectForecastingModule(LightningModule):
         return loss_dict
 
     def test_step(self, batch: Any, batch_idx: int):
-        x, y, lead_times, variables, out_variables = batch
+        x, y, clim, lead_times, variables, out_variables = batch
         pred = self.net(x, lead_times, variables, out_variables)
-        metrics=[lat_weighted_mse_val, lat_weighted_rmse]
+        metrics=[lat_weighted_mse_val, lat_weighted_rmse, lat_weighted_acc, spectral_div]
         all_loss_dicts = [
-            m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=None, log_postfix="") for m in metrics
+            m(pred, y, self.denormalization, vars=out_variables, lat=self.lat, clim=clim, log_postfix="") for m in metrics
         ]
 
         # combine loss dicts
