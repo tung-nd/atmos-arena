@@ -32,7 +32,7 @@ def download_from_urls(file_path, base_dest_folder, categories, num_threads=10):
 urls_file_path = '/home/tungnd/atmos-arena/geoscf_urls.txt'
 base_destination_folder = '/eagle/MDClimSim/tungnd/data/geoscf'
 number_of_threads = 60
-categories = ['chm_tavg']
+categories = ['chm_tavg_1hr_g1440x721_v1']
 
 os.makedirs(base_destination_folder, exist_ok=True)
 
