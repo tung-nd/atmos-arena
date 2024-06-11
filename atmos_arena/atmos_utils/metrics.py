@@ -141,6 +141,31 @@ def lat_weighted_rmse(pred, y, transform, vars, lat, clim, log_postfix="", mask=
 
     return loss_dict
 
+def lat_weighted_mae(pred, y, transform, vars, lat, clim, log_postfix="", mask=None):
+    pred = transform(pred)
+    y = transform(y)
+    
+    error = torch.abs(pred - y)
+    
+    # lattitude weights
+    w_lat = np.cos(np.deg2rad(lat))
+    w_lat = w_lat / w_lat.mean()  # (H, )
+    w_lat = torch.from_numpy(w_lat).unsqueeze(0).unsqueeze(-1).to(dtype=error.dtype, device=error.device)  # (1, H, 1)
+    
+    loss_dict = {}
+    with torch.no_grad():
+        for i, var in enumerate(vars):
+            if mask is not None:
+                loss_dict[f"w_mae_{var}{log_postfix}"] = (error[:, i] * w_lat * mask).sum() / mask.sum()
+            else:
+                loss_dict[f"w_mae_{var}{log_postfix}"] = (error[:, i] * w_lat).mean()
+    
+    if mask is not None:
+        loss_dict["w_mae"] = ((error * w_lat.unsqueeze(1)).mean(dim=1) * mask).sum() / mask.sum()
+    else:
+        loss_dict["w_mae"] = np.mean([loss_dict[k].cpu() for k in loss_dict.keys()])
+    
+    return loss_dict
 
 def lat_weighted_acc(pred, y, transform, vars, lat, clim, log_postfix=""):
     """
