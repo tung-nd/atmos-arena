@@ -56,6 +56,8 @@ def plot(model, dataset, out_denormalize):
     forecasts = out_denormalize(pred).squeeze().detach().numpy()
     ics = x.squeeze().numpy()
     
+    out_vars = [v for v in out_vars if v != 'mean_sea_level_pressure']
+    
     fig, axs = plt.subplots(len(out_vars), 4, figsize=(5*len(out_vars), 19))
     column_titles = ['Input (00:00:00 Jan 1st 2020)', f'Ground truth', f'Prediction', 'Bias']
     
