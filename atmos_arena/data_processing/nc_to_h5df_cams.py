@@ -59,6 +59,7 @@ def create_one_step_dataset(root_dir, save_dir, split, years, list_vars, chunk_s
                         available_levels = ds.isobaricInhPa.values
                     except:
                         available_levels = ds.level.values
+                    available_levels = [int(l) for l in available_levels]
                     ds_np = ds[NAME_TO_VAR[var]].values
                     for i, level in enumerate(available_levels):
                         if level in DEFAULT_PRESSURE_LEVELS:

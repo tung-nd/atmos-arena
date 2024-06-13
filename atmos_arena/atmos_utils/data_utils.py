@@ -47,6 +47,20 @@ NAME_TO_VAR = {
     "vorticity": "vo",
     "potential_vorticity": "pv",
     "total_cloud_cover": "tcc",
+    
+    "carbon_monoxide": "co",
+    "nitrogen_dioxide": "no2",
+    "nitrogen_monoxide": "no",
+    "ozone": "go3",
+    "particulate_matter_10um": "pm10",
+    "particulate_matter_1um": "pm1",
+    "particulate_matter_2.5um": "pm2p5",
+    "sulphur_dioxide": "so2",
+    "total_column_carbon_monoxide": "tcco",
+    "total_column_nitrogen_dioxide": "tcno2",
+    "total_column_nitrogen_monoxide": "tc_no",
+    "total_column_ozone": "gtco3",
+    "total_column_sulphur_dioxide": "tcso2",
 }
 
 VAR_TO_NAME = {v: k for k, v in NAME_TO_VAR.items()}
@@ -83,6 +97,15 @@ SINGLE_LEVEL_VARS = [
     "land_sea_mask",
     "orography",
     "lattitude",
+    
+    "particulate_matter_10um",
+    "particulate_matter_1um",
+    "particulate_matter_2.5um",
+    "total_column_carbon_monoxide",
+    "total_column_nitrogen_dioxide",
+    "total_column_nitrogen_monoxide",
+    "total_column_ozone",
+    "total_column_sulphur_dioxide",
 ]
 
 PRESSURE_LEVEL_VARS = [
@@ -96,6 +119,28 @@ PRESSURE_LEVEL_VARS = [
     "specific_humidity",
     "vorticity",
     "potential_vorticity",
+    
+    "carbon_monoxide",
+    "nitrogen_dioxide",
+    "nitrogen_monoxide",
+    "ozone",
+    "sulphur_dioxide",
+]
+
+CHEMISTRY_VARS = [
+    "particulate_matter_10um",
+    "particulate_matter_1um",
+    "particulate_matter_2.5um",
+    "total_column_carbon_monoxide",
+    "total_column_nitrogen_dioxide",
+    "total_column_nitrogen_monoxide",
+    "total_column_ozone",
+    "total_column_sulphur_dioxide",
+    "carbon_monoxide",
+    "nitrogen_dioxide",
+    "nitrogen_monoxide",
+    "ozone",
+    "sulphur_dioxide",
 ]
 
 DEFAULT_PRESSURE_LEVELS = [50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
