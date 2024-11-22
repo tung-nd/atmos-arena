@@ -1,7 +1,6 @@
 import argparse
 import torch
 from torch.utils.flop_counter import FlopCounterMode
-import numpy as np
 from atmos_arena.climax_arch import ClimaX
 from atmos_arena.stormer_arch import Stormer
 from atmos_arena.unet_arch import Unet

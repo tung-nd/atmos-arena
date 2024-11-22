@@ -170,13 +170,13 @@ def main():
     parser = argparse.ArgumentParser(description='Generate PSD comparison plots for climate models')
     
     # Data paths
-    parser.add_argument('--target_path', type=str, default='/eagle/MDClimSim/tungnd/atmost-arena/downscaling/targets.npy',
+    parser.add_argument('--target_path', type=str, required=True,
                         help='Path to target data file')
-    parser.add_argument('--climax_path', type=str, default='/eagle/MDClimSim/tungnd/atmost-arena/downscaling/climax_preds.npy',
+    parser.add_argument('--climax_path', type=str, required=True,
                         help='Path to ClimaX predictions file')
-    parser.add_argument('--stormer_path', type=str, default='/eagle/MDClimSim/tungnd/atmost-arena/downscaling/stormer_preds.npy',
+    parser.add_argument('--stormer_path', type=str, required=True,
                         help='Path to Stormer predictions file')
-    parser.add_argument('--unet_path', type=str, default='/eagle/MDClimSim/tungnd/atmost-arena/downscaling/unet_preds.npy',
+    parser.add_argument('--unet_path', type=str, required=True,
                         help='Path to UNet predictions file')
     
     # Plot settings
