@@ -1,6 +1,8 @@
 # AtmosArena: Benchmarking Foundation Models for Atmospheric Sciences
 
-Official implementation of AtmosArena, a comprehensive multi-task benchmark for evaluating foundation models in atmospheric sciences. AtmosArena provides standardized tasks, datasets, and evaluation metrics to facilitate systematic comparison of deep learning models across various atmospheric science applications.
+Official implementation of AtmosArena, a comprehensive multi-task benchmark for evaluating foundation models in atmospheric sciences. AtmosArena provides standardized tasks, datasets, and evaluation metrics to facilitate systematic comparison of deep learning models across various atmospheric science applications. Individual components (datasets, models, metrics) can also be used independently:
+- Datasets: [DATA_README.md](atmos_arena/data_processing/DATA_README.md)
+- Evaluation metrics: [metrics.py](atmos_arena/atmos_utils/metrics.py)
 
 ## Supported Tasks and Datasets
 
@@ -39,4 +41,7 @@ pip install -e .
 
 ## Usage
 
-Please refer to each task's directory for instructions on reproducing the results in the paper. Individual components (models, datasets, metrics) can be used independently as well.
+To reproduce each task in AtmosArena, cd into the task directory, and run
+```bash
+python train.py --config [CONFIG_FILE]
+```
