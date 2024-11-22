@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/downscaling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/downscaling_stormer_freeze_backbone_8bs_1e-5_lr
       name: downscaling_stormer_freeze_backbone_8bs_1e-5_lr
@@ -69,7 +68,7 @@ model:
   max_epochs: 50
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  pretrained_path: "/eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt"
+  pretrained_path: https://huggingface.co/tungnd/stormer/resolve/main/stormer_1.40625_patch_size_2.ckpt
 
   net:
     class_path: stormer_arch.Stormer
@@ -165,8 +164,8 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  in_root_dir: /eagle/MDClimSim/tungnd/data/wb2/5.625deg_1_step_6hr_h5df/
-  out_root_dir: /eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/
+  in_root_dir: /path/to/input_data
+  out_root_dir: /path/to/output_data
   in_variables: [
     "2m_temperature",
     "10m_u_component_of_wind",

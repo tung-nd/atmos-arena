@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/chem_downscaling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,10 +25,9 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/chem_downscaling_stormer_SO2_eval_normalized_finetune_backbone_64bs_1e-4_lr
-      name: chem_downscaling_stormer_SO2_eval_normalized_finetune_backbone_64bs_1e-4_lr
+      save_dir: ${trainer.default_root_dir}/chem_downscaling_stormer_O3_eval_normalized_finetune_backbone_64bs_1e-4_lr
+      name: chem_downscaling_stormer_O3_eval_normalized_finetune_backbone_64bs_1e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,7 +36,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/chem_downscaling_stormer_SO2_eval_normalized_finetune_backbone_64bs_1e-4_lr/checkpoints"
+        dirpath: "${trainer.default_root_dir}/chem_downscaling_stormer_O3_eval_normalized_finetune_backbone_64bs_1e-4_lr/checkpoints"
         monitor: "val/w_mae" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -69,17 +68,17 @@ model:
   max_epochs: 50
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  pretrained_path: "/eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt"
+  pretrained_path: https://huggingface.co/tungnd/stormer/resolve/main/stormer_1.40625_patch_size_2.ckpt
 
   net:
     class_path: stormer_arch.Stormer
     init_args:
       in_img_size: [128, 256]
       in_variables: [
-        "SO2"
+        "O3"
       ]
       out_variables: [
-        "SO2"
+        "O3"
       ]
       patch_size: 2
       embed_norm: True
@@ -91,8 +90,8 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/geoscf_1.40625/
-  variable: SO2
+  root_dir: /path/to/data
+  variable: O3
   train_year_strs: ['Y2018', 'Y2019', 'Y2020', 'Y2021']
   val_year_strs: ['Y2022']
   test_year_strs: ['Y2023']

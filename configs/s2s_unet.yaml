@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/s2s
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/s2s_unet_128_1_2_2_4_week_5_6_7_vars_128bs_5e-4_lr
       name: s2s_unet_128_1_2_2_4_week_5_6_7_vars_128bs_5e-4_lr
@@ -87,7 +86,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df_s2s/
+  root_dir: /path/to/data
   in_variables: [
     "2m_temperature",
     "10m_u_component_of_wind",

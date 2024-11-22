@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/monthly_infilling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/monthly_infilling_stormer_2m_temperature_freeze_backbone_4bs_1e-4_lr
       name: monthly_infilling_stormer_2m_temperature_freeze_backbone_4bs_1e-4_lr
@@ -69,7 +68,7 @@ model:
   max_epochs: 50
   warmup_start_lr: 1e-8
   eta_min: 1e-8
-  pretrained_path: /eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt
+  pretrained_path: https://huggingface.co/tungnd/stormer/resolve/main/stormer_1.40625_patch_size_2.ckpt
 
   net:
     class_path: stormer_arch.Stormer
@@ -160,7 +159,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/wb2/6h_128_256_from_full_res
+  root_dir: /path/to/data
   variable: 2m_temperature
   training_mask_ratio_min: 0.1
   training_mask_ratio_max: 0.9

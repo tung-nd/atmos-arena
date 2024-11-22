@@ -2,9 +2,9 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/chem_downscaling
+  default_root_dir: /path/to/root_dir
 
-  precision: 16
+  precision: bf16-mixed
 
   devices: null
   num_nodes: 1
@@ -25,10 +25,9 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/chem_downscaling_unet_NO2_eval_normalized_finetune_backbone_64bs_5e-4_lr
-      name: chem_downscaling_unet_NO2_eval_normalized_finetune_backbone_64bs_5e-4_lr
+      save_dir: ${trainer.default_root_dir}/chem_downscaling_unet_CO_eval_normalized_finetune_backbone_64bs_5e-4_lr
+      name: chem_downscaling_unet_CO_eval_normalized_finetune_backbone_64bs_5e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,7 +36,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/chem_downscaling_unet_NO2_eval_normalized_finetune_backbone_64bs_5e-4_lr/checkpoints"
+        dirpath: "${trainer.default_root_dir}/chem_downscaling_unet_CO_eval_normalized_finetune_backbone_64bs_5e-4_lr/checkpoints"
         monitor: "val/w_mae" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -52,6 +51,7 @@ trainer:
         mode: "min" # "max" means higher metric value is better, can be also "min"
         patience: 10 # how many validation epochs of not improving until training stops
         min_delta: 0. # minimum change in the monitored metric needed to qualify as an improvement
+        check_finite: False
 
     - class_path: lightning.pytorch.callbacks.RichModelSummary
       init_args:
@@ -87,8 +87,8 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/geoscf_1.40625/
-  variable: NO2
+  root_dir: /path/to/data
+  variable: CO
   train_year_strs: ['Y2018', 'Y2019', 'Y2020', 'Y2021']
   val_year_strs: ['Y2022']
   test_year_strs: ['Y2023']

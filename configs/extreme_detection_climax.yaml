@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/extreme_detection
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/extreme_detection_climax_deeper_cnn_downsample_finetune_backbone_weighted_jaccard_8bs_1e-4_lr
       name: extreme_detection_climax_deeper_cnn_downsample_finetune_backbone_weighted_jaccard_8bs_1e-4_lr
@@ -111,7 +110,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/atmos_arena/climatenet
+  root_dir: /path/to/data
   in_variables: [
     'TMQ',
     'U850',

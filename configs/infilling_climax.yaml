@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/infilling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/infilling_climax_temp_in_temp_out_finetune_backbone_64bs_1e-4_lr
       name: infilling_climax_temp_in_temp_out_finetune_backbone_64bs_1e-4_lr
@@ -137,7 +136,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df
+  root_dir: /path/to/data
   in_variables: [
     "2m_temperature",
   ]
@@ -147,7 +146,7 @@ data:
   training_mask_ratio_min: 0.1
   training_mask_ratio_max: 0.9
   eval_mask_ratios: [0.1, 0.3, 0.5, 0.7, 0.9]
-  eval_mask_path: /eagle/MDClimSim/tungnd/data/atmos_arena/infilling_masks
+  eval_mask_path: /path/to/generated_masks
   batch_size: 2
   num_workers: 4
   pin_memory: False

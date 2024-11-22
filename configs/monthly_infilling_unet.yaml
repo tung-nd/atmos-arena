@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/monthly_infilling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/monthly_infilling_unet_2m_temperature_8bs_5e-4_lr
       name: monthly_infilling_unet_2m_temperature_8bs_5e-4_lr
@@ -87,7 +86,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/wb2/6h_128_256_from_full_res
+  root_dir: /path/to/data
   variable: 2m_temperature
   training_mask_ratio_min: 0.1
   training_mask_ratio_max: 0.9

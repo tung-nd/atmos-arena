@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/air_composition_forecasting
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,10 +25,9 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
-      save_dir: ${trainer.default_root_dir}/air_comp_forecasting_climax_1day_surface_vars_finetune_backbone_32bs_5e-5_lr
-      name: air_comp_forecasting_climax_1day_surface_vars_finetune_backbone_32bs_5e-5_lr
+      save_dir: ${trainer.default_root_dir}/air_comp_forecasting_climax_7days_surface_vars_finetune_backbone_128bs_5e-4_lr
+      name: air_comp_forecasting_climax_7days_surface_vars_finetune_backbone_128bs_5e-4_lr
 
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
@@ -37,7 +36,7 @@ trainer:
 
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: "${trainer.default_root_dir}/air_comp_forecasting_climax_1day_surface_vars_finetune_backbone_32bs_5e-5_lr/checkpoints"
+        dirpath: "${trainer.default_root_dir}/air_comp_forecasting_climax_7days_surface_vars_finetune_backbone_128bs_5e-4_lr/checkpoints"
         monitor: "val/w_mse" # name of the logged metric which determines when model is improving
         mode: "min" # "max" means higher metric value is better, can be also "min"
         save_top_k: 1 # save k best models (determined by above metric)
@@ -61,7 +60,7 @@ trainer:
 
 # ---------------------------- MODEL -------------------------------------------
 model:
-  lr: 5e-5
+  lr: 5e-4
   beta_1: 0.9
   beta_2: 0.99
   weight_decay: 1e-5
@@ -166,7 +165,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/cams_1.40625_one_step_h5df/
+  root_dir: /path/to/data
   in_variables: [
     "2m_temperature",
     "10m_u_component_of_wind",
@@ -256,8 +255,8 @@ data:
     "total_column_ozone",
     "total_column_sulphur_dioxide",
   ]
-  lead_time: 24
-  data_freq: 6
-  batch_size: 1
+  lead_time: 168
+  data_freq: 12
+  batch_size: 4
   num_workers: 8
   pin_memory: False

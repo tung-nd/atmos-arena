@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/downscaling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/downscaling_climax_freeze_backbone_64bs_1e-4_lr
       name: downscaling_climax_freeze_backbone_64bs_1e-4_lr
@@ -137,8 +136,8 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  in_root_dir: /eagle/MDClimSim/tungnd/data/wb2/5.625deg_1_step_6hr_h5df/
-  out_root_dir: /eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/
+  in_root_dir: /path/to/input_data
+  out_root_dir: /path/to/output_data
   in_variables: [
     "2m_temperature",
     "10m_u_component_of_wind",

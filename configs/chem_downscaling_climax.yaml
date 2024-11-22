@@ -2,7 +2,7 @@ seed_everything: 42
 
 # ---------------------------- TRAINER -------------------------------------------
 trainer:
-  default_root_dir: /eagle/MDClimSim/tungnd/atmost-arena/chem_downscaling
+  default_root_dir: /path/to/root_dir
 
   precision: 16
 
@@ -25,7 +25,6 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.wandb.WandbLogger
     init_args:
-      entity: 'tungnd'
       project: 'atmos-arena'
       save_dir: ${trainer.default_root_dir}/chem_downscaling_climax_PM25_RH35_GOCART_eval_normalized_finetune_backbone_64bs_1e-4_lr
       name: chem_downscaling_climax_PM25_RH35_GOCART_eval_normalized_finetune_backbone_64bs_1e-4_lr
@@ -90,7 +89,7 @@ model:
 
 # ---------------------------- DATA -------------------------------------------
 data:
-  root_dir: /eagle/MDClimSim/tungnd/data/geoscf_1.40625/
+  root_dir: /path/to/data
   variable: PM25_RH35_GOCART
   train_year_strs: ['Y2018', 'Y2019', 'Y2020', 'Y2021']
   val_year_strs: ['Y2022']
