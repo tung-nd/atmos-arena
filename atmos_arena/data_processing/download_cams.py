@@ -25,14 +25,9 @@ def download_cams(save_dir, variable, year, api_key_path):
     
     # check if file has already been downloaded
     year_name = '2017_to_2022' if year is None else f'{year}'
-    if os.path.exists(os.path.join(save_dir, variable, f"{year_name}.nc")):
-        # check if file can be opened with xarray
-        try:
-            xr.open_dataset(os.path.join(save_dir, variable, f"{year_name}.nc"))
-            print (f"File {variable}/{year_name}.nc already exists. Skipping download.")
-            return
-        except:
-            pass
+    if os.path.exists(os.path.join(save_dir, variable, f"{year_name}.nc")) or os.path.exists(os.path.join(save_dir, variable, f"{year_name}.netcdf_zip")):
+        print (f"File {variable}/{year_name} already exists. Skipping download.")
+        return
     
     with open(api_key_path, 'r') as f:
         credentials = yaml.safe_load(f)
@@ -65,7 +60,7 @@ def main():
     parser.add_argument("--variable", type=str, required=True)
     parser.add_argument("--year", type=int, default=None)
     parser.add_argument("--save_dir", type=str, required=True)
-    parser.add_argument("--api_key_path", type=str, default='/home/tungnd/.cdsapirc_ads')
+    parser.add_argument("--api_key_path", type=str, required=True)
 
     args = parser.parse_args()
     

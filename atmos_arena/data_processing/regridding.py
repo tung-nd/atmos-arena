@@ -1,16 +1,4 @@
-# Copyright 2023 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Adopted from WeatherBench 2 at https://github.com/google-research/weatherbench2/blob/main/weatherbench2/regridding.py
 """Routines for horizontal regridding.
 
 This module supports three types of regridding:
@@ -34,7 +22,6 @@ from typing import Union
 import jax
 import jax.numpy as jnp
 import numpy as np
-from sklearn import neighbors
 import xarray
 
 Array = Union[np.ndarray, jax.Array]
@@ -78,20 +65,24 @@ class Regridder:
 
   def regrid_dataset(self, dataset: xarray.Dataset) -> xarray.Dataset:
     """Regrid an xarray.Dataset from source to target."""
-    if not (dataset['lat'].diff('lat') > 0).all():
+    if not (dataset['latitude'].diff('latitude') > 0).all():
       # ensure latitude is increasing
-      dataset = dataset.isel(lat=slice(None, None, -1))  # reverse
-    assert (dataset['lat'].diff('lat') > 0).all()
+      dataset = dataset.isel(latitude=slice(None, None, -1))  # reverse
+    assert (dataset['latitude'].diff('latitude') > 0).all()
     dataset = xarray.apply_ufunc(
         self.regrid_array,
         dataset,
         dask='parallelized',
-        input_core_dims=[['lon', 'lat']],
-        output_core_dims=[['lon', 'lat']],
-        exclude_dims={'lon', 'lat'},
-        dask_gufunc_kwargs={'output_sizes': {'lon': 256, 'lat': 128}},
+        input_core_dims=[['longitude', 'latitude']],
+        output_core_dims=[['longitude', 'latitude']],
+        exclude_dims={'longitude', 'latitude'},
+        dask_gufunc_kwargs={
+          'output_sizes': {
+            'longitude': self.target.lon.shape[0],
+            'latitude': self.target.lat.shape[0],
+          }
+        },
         output_dtypes=[np.float32],
-        # vectorize=True,  # loop over level & time, for lower memory usage
     )
     return dataset
 

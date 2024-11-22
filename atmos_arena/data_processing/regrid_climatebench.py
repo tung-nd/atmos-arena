@@ -1,7 +1,6 @@
 import os
 from glob import glob
-
-import click
+import argparse
 import xarray as xr
 import numpy as np
 import xesmf as xe
@@ -22,7 +21,6 @@ def regrid(
     :param reuse_weights: Reuse weights for regridding
     :return: ds_out: Regridded dataset
     """
-    # import pdb; pdb.set_trace()
     # Rename to ESMF compatible coordinates
     if 'latitude' in ds_in.coords:
         ds_in = ds_in.rename({'latitude': 'lat', 'longitude': 'lon'})
@@ -59,24 +57,20 @@ def regrid(
             ds_out = ds_out.isel(time=slice(1, None, 12))
             ds_out = ds_out.assign_coords({'time': ds_out.time + np.timedelta64(90, 'm')})
 
-    # # Regrid dataset
-    # ds_out = regridder(ds_in)
     return ds_out
 
-@click.command()
-@click.argument("path", type=click.Path(exists=True))
-@click.option("--save_path", type=str)
-@click.option("--ddeg_out", type=float, default=5.625)
-def main(
-    path,
-    save_path,
-    ddeg_out
-):
-    if not os.path.exists(save_path):
-        os.makedirs(save_path, exist_ok=True)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Regrid NetCDF files.')
+    parser.add_argument('--path', type=str, help='Input path')
+    parser.add_argument('--save_path', type=str, required=True, help='Output path')
+    parser.add_argument('--ddeg_out', type=float, default=5.625, help='Output resolution in degrees')
+    args = parser.parse_args()
+
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path, exist_ok=True)
 
     list_simu = ['hist-GHG.nc', 'hist-aer.nc', 'historical.nc', 'ssp126.nc', 'ssp370.nc', 'ssp585.nc', 'ssp245.nc']
-    ps = glob(os.path.join(path, f"*.nc"))
+    ps = glob(os.path.join(args.path, f"*.nc"))
     ps_ = []
     for p in ps:
         for simu in list_simu:
@@ -90,8 +84,5 @@ def main(
         if 'input' in p:
             for v in constant_vars:
                 x[v] = x[v].expand_dims(dim={'latitude': 96, 'longitude': 144}, axis=(1,2))
-        x_regridded = regrid(x, ddeg_out, reuse_weights=False)
-        x_regridded.to_netcdf(os.path.join(save_path, os.path.basename(p)))
-
-if __name__ == "__main__":
-    main()
+        x_regridded = regrid(x, args.ddeg_out, reuse_weights=False)
+        x_regridded.to_netcdf(os.path.join(args.save_path, os.path.basename(p)))

@@ -7,6 +7,7 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
+import argparse
 
 
 def get_out_path(root_dir, year, inp_file_idx, steps):
@@ -86,9 +87,6 @@ def process_file(path, root_dir_split, save_dir_split, variables, lead_time_list
                 group.create_dataset(sub_key, data=array, compression=None, dtype=np.float32)
 
 
-# setting up
-root_dir = '/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/'
-save_dir = '/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df_s2s/'
 variables = [
     'angle_of_sub_gridscale_orography',
     'geopotential_at_surface',
@@ -118,23 +116,39 @@ variables = [
 ]
 
 
-# data parameters
-data_freq = 6
-window_size_days = 14
-window_size_steps = (window_size_days * 24) // data_freq
-lead_time_list = [336, 672, 1008, 1344]
-max_lead_time = max(lead_time_list)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process weather data for S2S prediction.')
+    parser.add_argument('--root_dir', type=str, required=True, help='Root directory containing input data')
+    parser.add_argument('--save_dir', type=str, required=True, help='Directory to save processed data')
+    parser.add_argument('--data_freq', type=int, default=6, help='Data frequency in hours')
+    parser.add_argument('--window_size_days', type=int, default=14, help='Window size in days')
+    parser.add_argument('--lead_time_list', nargs='+', type=int, default=[336, 672, 1008, 1344],
+                      help='List of lead times in hours')
+    args = parser.parse_args()
 
-# accumulate
-num_cpus = multiprocessing.cpu_count()
-for split in ['train', 'val', 'test']:
-        save_dir_split = os.path.join(save_dir, split)
+    # Convert window size from days to steps
+    window_size_steps = (args.window_size_days * 24) // args.data_freq
+    max_lead_time = max(args.lead_time_list)
+
+    # Process each split
+    num_cpus = multiprocessing.cpu_count()
+    for split in ['train', 'val', 'test']:
+        save_dir_split = os.path.join(args.save_dir, split)
         os.makedirs(save_dir_split, exist_ok=True)
-        root_dir_split = os.path.join(root_dir, split)
+        root_dir_split = os.path.join(args.root_dir, split)
         file_paths = sorted(glob(os.path.join(root_dir_split, '*.h5')))
         
-        num_files = len(file_paths) - max_lead_time // data_freq - window_size_steps
+        num_files = len(file_paths) - max_lead_time // args.data_freq - window_size_steps
         
-        # Parallel processing of files
         with ProcessPoolExecutor(max_workers=num_cpus) as executor:
-            list(tqdm(executor.map(process_file, file_paths[:num_files], [root_dir_split]*num_files, [save_dir_split]*num_files, [variables]*num_files, [lead_time_list]*num_files, [data_freq]*num_files, [window_size_steps]*num_files), total=num_files, desc=f'Processing {split} data', unit='files'))
+            list(tqdm(executor.map(process_file, 
+                                 file_paths[:num_files],
+                                 [root_dir_split]*num_files,
+                                 [save_dir_split]*num_files,
+                                 [variables]*num_files,
+                                 [args.lead_time_list]*num_files,
+                                 [args.data_freq]*num_files,
+                                 [window_size_steps]*num_files),
+                     total=num_files,
+                     desc=f'Processing {split} data',
+                     unit='files'))
