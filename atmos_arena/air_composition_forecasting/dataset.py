@@ -5,7 +5,7 @@ import h5py
 
 from torch.utils.data import Dataset
 from glob import glob
-from atmos_utils.data_utils import CHEMISTRY_VARS
+from atmos_arena.atmos_utils.data_utils import CHEMISTRY_VARS
 
 class CAMSDirectDataset(Dataset):
     def __init__(
@@ -119,63 +119,3 @@ class CAMSDirectDataset(Dataset):
             self.in_variables,
             self.out_variables,
         )
-        
-
-# root_dir = '/eagle/MDClimSim/tungnd/data/cams_1.40625_one_step_h5df/'
-# mean_dict = dict(np.load(os.path.join(root_dir, 'normalize_mean.npz')))
-# std_dict = dict(np.load(os.path.join(root_dir, 'normalize_std.npz')))
-# log_mean_dict = dict(np.load(os.path.join(root_dir, 'normalize_log_mean.npz')))
-# log_std_dict = dict(np.load(os.path.join(root_dir, 'normalize_log_std.npz')))
-# dataset = CAMSDirectDataset(
-#     root_dir=root_dir + 'train/',
-#     in_variables=[
-#         "2m_temperature",
-#         "10m_u_component_of_wind",
-#         "10m_v_component_of_wind",
-#         "mean_sea_level_pressure",
-#         "particulate_matter_10um",
-#         "particulate_matter_1um",
-#         "particulate_matter_2.5um",
-#         "total_column_carbon_monoxide",
-#         "total_column_nitrogen_dioxide",
-#         "total_column_nitrogen_monoxide",
-#         "total_column_ozone",
-#         "total_column_sulphur_dioxide",
-#         "ozone_500",
-#         "specific_humidity_500",
-#         "sulphur_dioxide_500",
-#         "u_component_of_wind_500",
-#         "v_component_of_wind_500",
-#     ],
-#     out_variables=[
-#         "2m_temperature",
-#         "10m_u_component_of_wind",
-#         "10m_v_component_of_wind",
-#         "mean_sea_level_pressure",
-#         "particulate_matter_10um",
-#         "particulate_matter_1um",
-#         "particulate_matter_2.5um",
-#         "total_column_carbon_monoxide",
-#         "total_column_nitrogen_dioxide",
-#         "total_column_nitrogen_monoxide",
-#         "total_column_ozone",
-#         "total_column_sulphur_dioxide",
-#         "ozone_500",
-#         "specific_humidity_500",
-#         "sulphur_dioxide_500",
-#         "u_component_of_wind_500",
-#         "v_component_of_wind_500",
-#     ],
-#     mean_dict=mean_dict,
-#     std_dict=std_dict,
-#     log_mean_dict=log_mean_dict,
-#     log_std_dict=log_std_dict,
-#     lead_time=72,
-# )
-
-# x, y, lead_times, in_vars, out_vars = dataset[0]
-# print (x.shape)
-# print (y.shape)
-# print (lead_times)
-# print (in_vars)
-# print (out_vars)

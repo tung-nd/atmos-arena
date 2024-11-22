@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from forecasting.direct_module import DirectForecastingModule
-from forecasting.direct_datamodule import DirectForecastingDataModule
+from atmos_arena.forecasting.direct_module import DirectForecastingModule
+from atmos_arena.forecasting.direct_datamodule import DirectForecastingDataModule
 
 
 def main():

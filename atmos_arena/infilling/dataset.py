@@ -6,7 +6,7 @@ import xarray as xr
 
 from torch.utils.data import Dataset
 from glob import glob
-from atmos_utils.data_utils import SINGLE_LEVEL_VARS
+from atmos_arena.atmos_utils.data_utils import SINGLE_LEVEL_VARS
 
 class ERA5InfillingDataset(Dataset):
     def __init__(
@@ -105,30 +105,3 @@ class ERA5InfillingDataset(Dataset):
                 self.in_variables,
                 self.out_variables,
             )
-            
-# dataset = ERA5InfillingDataset(
-#     '/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/train',
-#     in_variables=['2m_temperature'],
-#     out_variables=['2m_temperature'],
-#     in_transform=lambda x: x,
-#     out_transform=lambda x: x,
-#     mask_ratio_list=[0.1, 0.3, 0.5, 0.7, 0.9],
-# )
-# x, y, mask, in_vars, out_vars = dataset[0]
-# print(x.shape, y.shape, mask.shape, in_vars, out_vars)
-# print (mask)
-
-
-# mask_dict = {ratio: np.load(f'/eagle/MDClimSim/tungnd/data/atmos_arena/infilling_masks/val_{ratio}.npy') for ratio in [0.1, 0.3, 0.5, 0.7, 0.9]}
-# dataset = ERA5InfillingDataset(
-#     '/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df/val',
-#     in_variables=['2m_temperature'],
-#     out_variables=['2m_temperature'],
-#     in_transform=lambda x: x,
-#     out_transform=lambda x: x,
-#     predefined_mask_dict=mask_dict
-# )
-# dict_x, y, dict_mask, in_vars, out_vars = dataset[0]
-# for ratio in dict_x.keys():
-#     print(dict_x[ratio].shape, dict_mask[ratio].shape)
-#     print (dict_mask[ratio])

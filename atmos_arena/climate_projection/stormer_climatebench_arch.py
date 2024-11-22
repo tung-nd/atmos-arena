@@ -2,8 +2,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from stormer_arch import Stormer
-from atmos_utils.pos_embed import get_1d_sincos_pos_embed_from_grid
+from atmos_arena.stormer_arch import Stormer
+from atmos_arena.atmos_utils.pos_embed import get_1d_sincos_pos_embed_from_grid
 
 
 class StormerClimateBench(Stormer):

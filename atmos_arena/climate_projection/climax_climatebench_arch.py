@@ -1,18 +1,8 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
 import numpy as np
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-# --------------------------------------------------------
-# References:
-# timm: https://github.com/rwightman/pytorch-image-models/tree/master/timm
-# DeiT: https://github.com/facebookresearch/deit
-# --------------------------------------------------------
 import torch
 import torch.nn as nn
-from climax_arch import ClimaX
-from atmos_utils.pos_embed import get_1d_sincos_pos_embed_from_grid
+from atmos_arena.climax_arch import ClimaX
+from atmos_arena.atmos_utils.pos_embed import get_1d_sincos_pos_embed_from_grid
 
 
 class ClimaXClimateBench(ClimaX):

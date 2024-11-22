@@ -3,13 +3,12 @@ from typing import Any, Union
 import numpy as np
 import torch
 from lightning import LightningModule
-from extreme_detection.climax_climatenet_arch import ClimaXClimateNet
-from extreme_detection.stormer_climatenet_arch import StormerClimateNet
-from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
-from atmos_utils.pos_embed import interpolate_pos_embed
-from extreme_detection.losses import loss_function
-from extreme_detection.metrics import get_cm, get_confusion_metrics, get_dice_perClass, get_iou_perClass
-from torchvision.transforms import transforms
+from atmos_arena.extreme_detection.climax_climatenet_arch import ClimaXClimateNet
+from atmos_arena.extreme_detection.stormer_climatenet_arch import StormerClimateNet
+from atmos_arena.atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
+from atmos_arena.atmos_utils.pos_embed import interpolate_pos_embed
+from atmos_arena.extreme_detection.losses import loss_function
+from atmos_arena.atmos_utils.metrics import get_cm, get_confusion_metrics, get_dice_perClass, get_iou_perClass
 
 
 class ClimateNetModule(LightningModule):
@@ -219,18 +218,3 @@ class ClimateNetModule(LightningModule):
         )
         scheduler = {"scheduler": lr_scheduler, "interval": "step", "frequency": 1}
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
-    
-# model = StormerClimateBench(
-#     in_img_size=[32, 64],
-#     in_variables=['CO2', 'SO2', 'CH4', 'BC'],
-#     out_variables=['tas'],
-#     time_history=10,
-#     patch_size=2,
-#     embed_norm=True,
-#     hidden_size=1024,
-#     depth=24,
-#     num_heads=16,
-#     mlp_ratio=4.0,
-#     freeze_encoder=True
-# )
-# module = ClimateBenchModule(net=model, pretrained_path='/eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt')

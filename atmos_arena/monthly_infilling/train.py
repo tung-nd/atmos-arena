@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from monthly_infilling.module import InfillingModule
-from monthly_infilling.datamodule import MonthlyInfillingDataModule
+from atmos_arena.monthly_infilling.module import InfillingModule
+from atmos_arena.monthly_infilling.datamodule import MonthlyInfillingDataModule
 
 
 def main():

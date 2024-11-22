@@ -1,19 +1,17 @@
 from typing import Any, Union
 
-import numpy as np
 import torch
 from lightning import LightningModule
-from climax_arch import ClimaX
-from stormer_arch import Stormer
-from unet_arch import Unet
-from atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
-from atmos_utils.metrics import (
+from atmos_arena.climax_arch import ClimaX
+from atmos_arena.stormer_arch import Stormer
+from atmos_arena.unet_arch import Unet
+from atmos_arena.atmos_utils.lr_scheduler import LinearWarmupCosineAnnealingLR
+from atmos_arena.atmos_utils.metrics import (
     lat_weighted_mse,
     lat_weighted_mse_val,
     lat_weighted_rmse,
-    pearson
 )
-from atmos_utils.pos_embed import interpolate_pos_embed
+from atmos_arena.atmos_utils.pos_embed import interpolate_pos_embed
 from torchvision.transforms import transforms
 
 
@@ -167,18 +165,3 @@ class InfillingModule(LightningModule):
         )
         scheduler = {"scheduler": lr_scheduler, "interval": "step", "frequency": 1}
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
-    
-# model = StormerClimateBench(
-#     in_img_size=[32, 64],
-#     in_variables=['CO2', 'SO2', 'CH4', 'BC'],
-#     out_variables=['tas'],
-#     time_history=10,
-#     patch_size=2,
-#     embed_norm=True,
-#     hidden_size=1024,
-#     depth=24,
-#     num_heads=16,
-#     mlp_ratio=4.0,
-#     freeze_encoder=True
-# )
-# module = ClimateBenchModule(net=model, pretrained_path='/eagle/MDClimSim/tungnd/stormer/models/6_12_24_climax_large_2_True_delta_8/checkpoints/epoch_015.ckpt')

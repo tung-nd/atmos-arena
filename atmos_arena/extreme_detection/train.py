@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from extreme_detection.module import ClimateNetModule
-from extreme_detection.datamodule import ClimateNetDataModule
+from atmos_arena.extreme_detection.module import ClimateNetModule
+from atmos_arena.extreme_detection.datamodule import ClimateNetDataModule
 
 
 def main():

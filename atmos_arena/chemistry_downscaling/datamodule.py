@@ -6,11 +6,10 @@ from typing import Optional, Sequence, Tuple
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import transforms
 from lightning import LightningDataModule
 
 # Local application
-from chemistry_downscaling.dataset import GEOSCFDownscalingDataset
+from atmos_arena.chemistry_downscaling.dataset import GEOSCFDownscalingDataset
 
 
 def collate_fn(

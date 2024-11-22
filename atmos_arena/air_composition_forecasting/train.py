@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from air_composition_forecasting.direct_module import CAMSDirectForecastingModule
-from air_composition_forecasting.direct_datamodule import CAMSDirectDataModule
+from atmos_arena.air_composition_forecasting.direct_module import CAMSDirectForecastingModule
+from atmos_arena.air_composition_forecasting.direct_datamodule import CAMSDirectDataModule
 
 
 def main():

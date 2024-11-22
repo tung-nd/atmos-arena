@@ -1,7 +1,5 @@
 import os
 import xarray as xr
-import random
-import numpy as np
 import torch
 from glob import glob
 from torch.utils.data import Dataset
@@ -29,10 +27,3 @@ class ClimateNetDataset(Dataset):
         labels = torch.from_numpy(dataset['LABELS'].to_numpy())
         lead_times = torch.Tensor([0.0]).to(dtype=inp.dtype)
         return inp, labels, lead_times, self.in_variables
-
-
-# dataset = ClimateNetDataset(root_dir='/eagle/MDClimSim/tungnd/data/atmos_arena/climatenet/train/', in_variables=['TMQ', 'U850', 'V850', 'PSL'], transform=torch.nn.Identity())
-# x, y = dataset[0]
-# print(x.shape, y.shape)
-# print (x.dtype, y.dtype)
-# print (y)

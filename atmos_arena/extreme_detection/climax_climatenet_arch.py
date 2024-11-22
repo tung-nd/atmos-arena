@@ -11,8 +11,8 @@
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from climax_arch import ClimaX
-from extreme_detection.cgnet import ConvBNPReLU
+from atmos_arena.climax_arch import ClimaX
+from atmos_arena.extreme_detection.cgnet import ConvBNPReLU
 
 
 class ClimaXClimateNet(ClimaX):
@@ -112,43 +112,3 @@ class ClimaXClimateNet(ClimaX):
         preds = self.unpatchify(preds)
         preds = F.interpolate(preds, self.in_img_size, mode='bilinear',align_corners = False)   #Upsample score map, factor=8
         return preds
-
-
-# model = ClimaXClimateNet(
-#     default_vars=[
-#         'TMQ',
-#         'U850',
-#         'V850',
-#         'UBOT',
-#         'VBOT',
-#         'QREFHT',
-#         'PS',
-#         'PSL',
-#         'T200',
-#         'T500',
-#         'PRECT',
-#         'TS',
-#         'TREFHT',
-#         'Z1000',
-#         'Z200',
-#         'ZBOT',
-#     ],
-#     out_vars=[
-#         "Background",
-#         "Tropical Cyclone",
-#         "Atmospheric River"
-#     ],
-#     img_size=[768, 1152],
-#     patch_size=8,
-#     embed_dim=1024,
-#     depth=8,
-#     decoder_depth=2,
-#     num_heads=16,
-#     mlp_ratio=4,
-#     drop_path=0.1,
-#     drop_rate=0.1,
-#     freeze_encoder=False,
-# ).cuda()
-# x = torch.randn(1, 16, 768, 1152).cuda()
-# y = model(x, torch.Tensor([0.]).cuda(), None, None)
-# print (y.shape)

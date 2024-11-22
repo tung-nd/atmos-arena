@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from downscaling.module import DownscalingModule
-from downscaling.datamodule import DownscalingDataModule
+from atmos_arena.downscaling.module import DownscalingModule
+from atmos_arena.downscaling.datamodule import DownscalingDataModule
 
 def get_best_checkpoint(dir):
     ckpt_paths = os.listdir(os.path.join(dir, 'checkpoints'))

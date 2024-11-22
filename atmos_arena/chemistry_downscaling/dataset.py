@@ -1,11 +1,9 @@
 import os
 import xarray as xr
-import random
-import numpy as np
 import torch
 from glob import glob
 from torch.utils.data import Dataset
-from chemistry_downscaling.normalization_constants import LOG_MEAN_DICT, LOG_STD_DICT, O3_SCALE_RATIO
+from atmos_arena.chemistry_downscaling.normalization_constants import LOG_MEAN_DICT, LOG_STD_DICT, O3_SCALE_RATIO
 
 
 class GEOSCFDownscalingDataset(Dataset):
@@ -64,13 +62,3 @@ class GEOSCFDownscalingDataset(Dataset):
         lowres_x = self.downsample(x, (self.downscale_ratio, self.downscale_ratio))
         lead_times = torch.Tensor([0.0]).to(dtype=x.dtype)
         return lowres_x.unsqueeze(0), x.unsqueeze(0), lead_times, [self.variable]
-
-
-# dataset = GEOSCFDownscalingDataset(root_dir='/eagle/MDClimSim/tungnd/data/geoscf_1.40625/', year_strs=['Y2018', 'Y2019', 'Y2020', 'Y2021'], variable='O3', downscale_ratio=4)
-# x, y, lead_times, variables = dataset[0]
-# print(x.shape)
-# print (y.shape)
-# print (x)
-# print (y)
-# print (lead_times)
-# print (variables)

@@ -6,7 +6,7 @@ import xarray as xr
 
 from torch.utils.data import Dataset
 from glob import glob
-from atmos_utils.data_utils import SINGLE_LEVEL_VARS
+from atmos_arena.atmos_utils.data_utils import SINGLE_LEVEL_VARS
 
 class ERA5DownscalingDataset(Dataset):
     def __init__(
@@ -85,16 +85,3 @@ class ERA5DownscalingDataset(Dataset):
             self.in_variables,
             self.out_variables,
         )
-        
-
-# dataset = ERA5DownscalingDataset(
-#     in_root_dir='/eagle/MDClimSim/tungnd/data/wb2/5.625deg_1_step_6hr_h5df/',
-#     out_root_dir='/eagle/MDClimSim/tungnd/data/wb2/1.40625deg_from_full_res_1_step_6hr_h5df',
-#     clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
-#     in_variables=['2m_temperature', 'geopotential_500'],
-#     out_variables=['2m_temperature', 'geopotential_500'],
-#     in_transform=lambda x: x,
-#     out_transform=lambda x: x,
-# )
-# for v in dataset.clim_dict.keys():
-#     print(v, dataset.clim_dict[v].shape)

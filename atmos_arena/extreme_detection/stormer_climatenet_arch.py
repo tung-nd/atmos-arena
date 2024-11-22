@@ -2,8 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from stormer_arch import Stormer
-from extreme_detection.cgnet import ConvBNPReLU
+from atmos_arena.stormer_arch import Stormer
+from atmos_arena.extreme_detection.cgnet import ConvBNPReLU
 
 
 class StormerClimateNet(Stormer):

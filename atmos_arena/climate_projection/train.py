@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from climate_projection.module import ClimateBenchModule
-from climate_projection.datamodule import ClimateBenchDataModule
+from atmos_arena.climate_projection.module import ClimateBenchModule
+from atmos_arena.climate_projection.datamodule import ClimateBenchDataModule
 
 
 def main():

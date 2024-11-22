@@ -10,7 +10,7 @@ from torchvision.transforms import transforms
 from lightning import LightningDataModule
 
 # Local application
-from infilling.dataset import ERA5InfillingDataset
+from atmos_arena.infilling.dataset import ERA5InfillingDataset
 
 
 def collate_fn_train(
@@ -51,7 +51,7 @@ class InfillingDataModule(LightningDataModule):
         training_mask_ratio_max,
         eval_mask_ratios,
         eval_mask_path,
-        clim_path='/eagle/MDClimSim/tungnd/data/wb2/climatology_128_256.nc',
+        clim_path,
         batch_size=1,
         num_workers=0,
         pin_memory=False,
@@ -154,30 +154,3 @@ class InfillingDataModule(LightningDataModule):
                 pin_memory=self.hparams.pin_memory,
                 collate_fn=collate_fn_val
             )
-
-# datamodule = OneStepDataModule(
-#     '/eagle/MDClimSim/tungnd/data/wb1/1.40625deg_1_step_6hr',
-#     variables=[
-#         "land_sea_mask",
-#         "orography",
-#         "lattitude",
-#         "2m_temperature",
-#         "10m_u_component_of_wind",
-#         "10m_v_component_of_wind",
-#         "toa_incident_solar_radiation",
-#         "total_cloud_cover",
-#         "geopotential_500",
-#         "temperature_850"
-#     ],
-#     batch_size=128,
-#     num_workers=1,
-#     pin_memory=False
-# )
-# datamodule.setup()
-# for batch in datamodule.train_dataloader():
-#     inp, out, vars, out_vars = batch
-#     print (inp.shape)
-#     print (out.shape)
-#     print (vars)
-#     print (out_vars)
-#     break

@@ -6,7 +6,7 @@ import xarray as xr
 
 from torch.utils.data import Dataset
 from glob import glob
-from atmos_utils.data_utils import SINGLE_LEVEL_VARS
+from atmos_arena.atmos_utils.data_utils import SINGLE_LEVEL_VARS
 
 class ERA5WindowDataset(Dataset):
     def __init__(

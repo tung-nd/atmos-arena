@@ -10,7 +10,7 @@ from torchvision.transforms import transforms
 from lightning import LightningDataModule
 
 # Local application
-from air_composition_forecasting.dataset import CAMSDirectDataset
+from atmos_arena.air_composition_forecasting.dataset import CAMSDirectDataset
 
 
 def collate_fn(
@@ -136,30 +136,3 @@ class CAMSDirectDataModule(LightningDataModule):
                 pin_memory=self.hparams.pin_memory,
                 collate_fn=collate_fn
             )
-
-# datamodule = OneStepDataModule(
-#     '/eagle/MDClimSim/tungnd/data/wb1/1.40625deg_1_step_6hr',
-#     variables=[
-#         "land_sea_mask",
-#         "orography",
-#         "lattitude",
-#         "2m_temperature",
-#         "10m_u_component_of_wind",
-#         "10m_v_component_of_wind",
-#         "toa_incident_solar_radiation",
-#         "total_cloud_cover",
-#         "geopotential_500",
-#         "temperature_850"
-#     ],
-#     batch_size=128,
-#     num_workers=1,
-#     pin_memory=False
-# )
-# datamodule.setup()
-# for batch in datamodule.train_dataloader():
-#     inp, out, vars, out_vars = batch
-#     print (inp.shape)
-#     print (out.shape)
-#     print (vars)
-#     print (out_vars)
-#     break

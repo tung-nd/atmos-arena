@@ -1,7 +1,5 @@
 import torch
-from torch.autograd import Variable
 from torch import nn
-import numpy as np
 import torch.nn.functional as F
 
 def loss_function(logits, true, config_loss='jaccard'):

@@ -3,8 +3,8 @@ import os
 from lightning.pytorch.cli import LightningCLI, SaveConfigCallback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers.wandb import WandbLogger
-from chemistry_downscaling.module import ChemistryDownscalingModule
-from chemistry_downscaling.datamodule import GEOSCFDownscalingDataModule
+from atmos_arena.chemistry_downscaling.module import ChemistryDownscalingModule
+from atmos_arena.chemistry_downscaling.datamodule import GEOSCFDownscalingDataModule
 
 
 def main():

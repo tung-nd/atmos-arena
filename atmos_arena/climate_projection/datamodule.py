@@ -5,7 +5,7 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
-from climate_projection.dataset import ClimateBenchDataset, input_for_training, load_x_y, output_for_training, split_train_val
+from atmos_arena.climate_projection.dataset import ClimateBenchDataset, input_for_training, load_x_y, output_for_training, split_train_val
 
 
 def collate_fn(batch):
@@ -124,35 +124,3 @@ class ClimateBenchDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             collate_fn=collate_fn,
         )
-        
-
-# datamodule = ClimateBenchDataModule(
-#     root_dir='/eagle/MDClimSim/tungnd/data/climatebench',
-#     history=10,
-#     list_train_simu=[
-#         'ssp126',
-#         'ssp370',
-#         'ssp585',
-#         'historical',
-#         'hist-GHG',
-#         'hist-aer'
-#     ],
-#     list_test_simu=[
-#         'ssp245'
-#     ],
-#     variables=[
-#         'CO2',
-#         'SO2',
-#         'CH4',
-#         'BC'
-#     ],
-#     out_variables='tas',
-#     train_ratio=0.9,
-#     batch_size=128,
-#     num_workers=1,
-#     pin_memory=False,
-# )
-# train_loader = datamodule.train_dataloader()
-# inp, out, lead_times, variables, out_variables = next(iter(train_loader))
-# print(inp.shape, out.shape, lead_times.shape)
-# print(variables, out_variables)
